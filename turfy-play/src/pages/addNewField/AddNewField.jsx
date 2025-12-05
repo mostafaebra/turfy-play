@@ -1,9 +1,11 @@
+// (git commit --amend --no-edit) -----> update into latest commit without edit 
 import React, { useState } from "react";
 import { FiArrowRight, FiArrowLeft } from "react-icons/fi";
 
 import Navbar from "../../components/Navbar";
 import Stepper from "../../components/Stepper";
 import Step1Info from "../../components/Step1Info";
+import Step2Media from "../../components/Step2Media";
 
 const AddNewField = () => {
   
@@ -12,7 +14,9 @@ const AddNewField = () => {
     fieldName: "",
     sport: "football",
     address: "",
-    mapLink: ""
+    mapLink: "",
+    images : [],
+    contract: null,
   });
 
 
@@ -24,7 +28,7 @@ const AddNewField = () => {
 
 
   // which step is active
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(2);
 
 
 
@@ -64,13 +68,22 @@ const AddNewField = () => {
         
 
         {/* Show this only if we are in Step 1 */}
-        {currentStep === 1 && (
-          <Step1Info 
-            formData={formData}
-            handleChange={handleChange}
-            setFormData={setFormData} 
-          />
-        )}
+        { currentStep === 1 && (
+            <Step1Info 
+              formData={formData}
+              handleChange={handleChange}
+              setFormData={setFormData} 
+            />
+          ) ||
+          currentStep === 2 && (
+            <Step2Media 
+              formData={formData}
+              handleChange={handleChange}
+              setFormData={setFormData} 
+            />
+          )
+
+        }
 
         {/* --- Buttons --- */}
         <div className="flex items-center justify-between mt-8 pt-6 border-t border-border-color">

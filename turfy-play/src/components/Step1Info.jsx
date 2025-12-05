@@ -46,8 +46,8 @@ const Step1Info = ({ formData, handleChange, setFormData }) => {
               className={`cursor-pointer flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 transition-all duration-200
                             ${
                               formData.sport === sport.id
-                                ? "border-primary bg-primary/5 text-primary" // لو متساويين = نشط
-                                : "border-border-color text-text-light hover:border-primary/50" // غير نشط
+                                ? "border-primary bg-primary/5 text-primary" 
+                                : "border-border-color text-text-light hover:border-primary/50" 
                             }`}
             >
               {sport.icon}
