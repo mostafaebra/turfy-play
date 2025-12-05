@@ -7,6 +7,7 @@ import Stepper from "../../components/Stepper";
 import Step1Info from "../../components/Step1Info";
 import Step2Media from "../../components/Step2Media";
 import Step3Details from "../../components/Step3Details";
+import Step4Rules     from "../../components/Step4Rules";
 
 const AddNewField = () => {
   
@@ -21,6 +22,12 @@ const AddNewField = () => {
     surfaceType: "Natural Grass",  
     fieldSize: "",
     amenities: [],
+    pricePerHour : "",
+    open24 : false,
+    openTime : "",
+    closeTime : "",
+    cancelPolicy : "",
+    bookingWindow: ""
   });
 
 
@@ -32,7 +39,7 @@ const AddNewField = () => {
 
 
   // which step is active
-  const [currentStep, setCurrentStep] = useState(3);
+  const [currentStep, setCurrentStep] = useState(4);
 
 
 
@@ -88,6 +95,13 @@ const AddNewField = () => {
           )||
           currentStep === 3 && (
             <Step3Details 
+              formData={formData}
+              handleChange={handleChange}
+              setFormData={setFormData} 
+            />
+          )||
+          currentStep === 4 && (
+            <Step4Rules 
               formData={formData}
               handleChange={handleChange}
               setFormData={setFormData} 

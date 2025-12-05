@@ -1,35 +1,45 @@
 import React from "react";
 
-import { FiSun, FiDisc, FiMonitor, FiWifi, FiUnlock, FiCoffee } from "react-icons/fi"; // أيقونات مقترحة
+import {
+  FiSun,
+  FiDisc,
+  FiMonitor,
+  FiWifi,
+  FiUnlock,
+  FiCoffee,
+} from "react-icons/fi"; // أيقونات مقترحة
 import { MdOutlineShower, MdDirectionsCar } from "react-icons/md";
 
 const amenitiesList = [
-    { id: "lighting", label: "Professional Lighting", icon: <FiSun size={20} /> },
-    { id: "showers",  label: "Showers",               icon: <MdOutlineShower size={20} /> },
-    { id: "parking",  label: "Secure Parking",        icon: <MdDirectionsCar size={20} /> },
-    { id: "balls",    label: "Ball Rental",           icon: <FiDisc size={20} /> },
-    { id: "wifi",     label: "Free WiFi",             icon: <FiWifi size={20} /> },
-    { id: "seating",  label: "Spectator Seating",     icon: <FiMonitor size={20} /> }, // أو أي أيقونة مناسبة
-    { id: "lockers",  label: "Lockers / Changing",    icon: <FiUnlock size={20} /> },
-    { id: "cafe",     label: "Cafeteria",             icon: <FiCoffee size={20} /> },
-  ];
-
-
+  { id: "lighting", label: "Professional Lighting", icon: <FiSun size={20} /> },
+  { id: "showers", label: "Showers", icon: <MdOutlineShower size={20} /> },
+  {
+    id: "parking",
+    label: "Secure Parking",
+    icon: <MdDirectionsCar size={20} />,
+  },
+  { id: "balls", label: "Ball Rental", icon: <FiDisc size={20} /> },
+  { id: "wifi", label: "Free WiFi", icon: <FiWifi size={20} /> },
+  { id: "seating", label: "Spectator Seating", icon: <FiMonitor size={20} /> }, // أو أي أيقونة مناسبة
+  { id: "lockers", label: "Lockers / Changing", icon: <FiUnlock size={20} /> },
+  { id: "cafe", label: "Cafeteria", icon: <FiCoffee size={20} /> },
+];
 
 const Step3Details = ({ formData, setFormData, handleChange }) => {
+  const toggleAmenity = (id) => {
+    setFormData((prev) => {
+      const currentAmenities = prev.amenities || [];
 
-    const toggleAmenity = (id) => {
-        setFormData((prev) => {
-        const currentAmenities = prev.amenities || []; 
-        
-        
-        if (currentAmenities.includes(id)) {
-            return { ...prev, amenities: currentAmenities.filter((item) => item !== id) };
-        } else {
-            return { ...prev, amenities: [...currentAmenities, id] };
-        }
-        });
-    };
+      if (currentAmenities.includes(id)) {
+        return {
+          ...prev,
+          amenities: currentAmenities.filter((item) => item !== id),
+        };
+      } else {
+        return { ...prev, amenities: [...currentAmenities, id] };
+      }
+    });
+  };
 
   // List of options for the dropdown
   const surfaceTypes = [
@@ -43,7 +53,6 @@ const Step3Details = ({ formData, setFormData, handleChange }) => {
 
   return (
     <div className="space-y-8">
-
       {/* --- 1. Main Header --- */}
       <div className="border-b border-border-color pb-4 mb-6">
         <h2 className="text-text-dark font-bold text-xl">
@@ -55,12 +64,10 @@ const Step3Details = ({ formData, setFormData, handleChange }) => {
       <div>
         {/* Section Title */}
         <h3 className="text-text-dark font-bold text-lg mb-4">
-           Field Condition & Dimensions
+          Field Condition & Dimensions
         </h3>
 
-        {/* Grid Container: 1 column on mobile, 2 columns on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
           {/* A. Surface Type Dropdown */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-text-dark">
@@ -94,7 +101,8 @@ const Step3Details = ({ formData, setFormData, handleChange }) => {
           {/* Field Size Input */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-text-dark">
-              Field Size / Format <span className="text-gray-400 font-normal">(Optional)</span>
+              Field Size / Format{" "}
+              <span className="text-gray-400 font-normal">(Optional)</span>
             </label>
             <input
               type="text"
@@ -105,48 +113,48 @@ const Step3Details = ({ formData, setFormData, handleChange }) => {
               className="w-full p-3 border border-border-color rounded-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-dark-navy placeholder:text-gray-400"
             />
           </div>
-
         </div>
-       
-      <div className="border-t border-gray-100 my-6"></div>
 
-      // Amenities 
-      <div>
-        <h3 className="text-text-dark font-bold text-lg mb-4">
-            Amenities
-        </h3>
-        <p className="text-text-light text-sm mb-4">Select all available facilities and services at your venue.</p>
+        <div className="border-t border-gray-100 my-6"></div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Amenities  */}
+        <div>
+          <h3 className="text-text-dark font-bold text-lg mb-4">Amenities</h3>
+          <p className="text-text-light text-sm mb-4">
+            Select all available facilities and services at your venue.
+          </p>
+
+          {/* Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {amenitiesList.map((item) => {
-                
+              const isSelected = formData.amenities?.includes(item.id);
 
-                const isSelected = formData.amenities?.includes(item.id);
-
-                return (
-                    <div 
-                        key={item.id}
-                        onClick={() => toggleAmenity(item.id)}
-                        className={`
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => toggleAmenity(item.id)}
+                  className={`
                             cursor-pointer flex flex-col items-center justify-center gap-3 p-4 rounded-xl border transition-all duration-200 text-center h-32
-                            ${isSelected 
-                                ? "border-primary bg-primary/5 text-primary shadow-sm" 
-                                : "border-border-color text-text-light hover:border-primary/50 hover:bg-gray-50" 
+                            ${
+                              isSelected
+                                ? "border-primary bg-primary/5 text-primary shadow-sm"
+                                : "border-border-color text-text-light hover:border-primary/50 hover:bg-gray-50"
                             }
                         `}
-                    >
-                        <div className={`p-2 rounded-full ${isSelected ? "bg-white" : "bg-gray-100"}`}>
-                            {item.icon}
-                        </div>
-                        <span className="font-medium text-sm">{item.label}</span>
-                    </div>
-                );
+                >
+                  <div
+                    className={`p-2 rounded-full ${
+                      isSelected ? "bg-white" : "bg-gray-100"
+                    }`}
+                  >
+                    {item.icon}
+                  </div>
+                  <span className="font-medium text-sm">{item.label}</span>
+                </div>
+              );
             })}
+          </div>
         </div>
-      </div>
-
-
       </div>
     </div>
   );
