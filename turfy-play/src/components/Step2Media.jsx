@@ -52,7 +52,7 @@ const Step2Media = ({ formData, setFormData }) => {
   };
 
   return (
-    <form className="space-y-6">
+    <div className="space-y-6">
       {/* step number */}
       <div className="border-b border-border-color pb-4 mb-6">
         <h2 className="text-text-dark font-medium md:font-bold text-xl">
@@ -121,7 +121,7 @@ const Step2Media = ({ formData, setFormData }) => {
               <button
                 type="button"
                 onClick={(e) => {
-                  e.stopPropagation(); 
+                  e.stopPropagation();
                   const updatedImages = formData.images.filter(
                     (_, i) => i !== index
                   );
@@ -192,7 +192,6 @@ const Step2Media = ({ formData, setFormData }) => {
           {/* files Uploaded */}
           {formData.contract && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg p-4 gap-3">
-
               <div className="flex items-center gap-3 w-full">
                 <div className="bg-white p-2 rounded-full shadow-sm shrink-0">
                   <FiCheckCircle className="text-emerald-500 text-xl" />
@@ -217,7 +216,7 @@ const Step2Media = ({ formData, setFormData }) => {
           )}
         </div>
       </div>
-    </form>
+    </div>
   );
 };
 export default Step2Media;

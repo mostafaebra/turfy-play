@@ -6,6 +6,7 @@ import Navbar from "../../components/Navbar";
 import Stepper from "../../components/Stepper";
 import Step1Info from "../../components/Step1Info";
 import Step2Media from "../../components/Step2Media";
+import Step3Details from "../../components/Step3Details";
 
 const AddNewField = () => {
   
@@ -17,6 +18,9 @@ const AddNewField = () => {
     mapLink: "",
     images : [],
     contract: null,
+    surfaceType: "Natural Grass",  
+    fieldSize: "",
+    amenities: [],
   });
 
 
@@ -28,7 +32,7 @@ const AddNewField = () => {
 
 
   // which step is active
-  const [currentStep, setCurrentStep] = useState(2);
+  const [currentStep, setCurrentStep] = useState(3);
 
 
 
@@ -77,6 +81,13 @@ const AddNewField = () => {
           ) ||
           currentStep === 2 && (
             <Step2Media 
+              formData={formData}
+              handleChange={handleChange}
+              setFormData={setFormData} 
+            />
+          )||
+          currentStep === 3 && (
+            <Step3Details 
               formData={formData}
               handleChange={handleChange}
               setFormData={setFormData} 

@@ -13,7 +13,7 @@ const Step1Info = ({ formData, handleChange, setFormData }) => {
   ];
 
   return (
-    <form className="space-y-6">
+    <div className="space-y-6">
       <div className="border-b border-border-color pb-4 mb-6">
         <h2 className="text-xl font-bold text-dark-navy">
           Step 1: Basic Information & Location
@@ -46,8 +46,8 @@ const Step1Info = ({ formData, handleChange, setFormData }) => {
               className={`cursor-pointer flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 transition-all duration-200
                             ${
                               formData.sport === sport.id
-                                ? "border-primary bg-primary/5 text-primary" 
-                                : "border-border-color text-text-light hover:border-primary/50" 
+                                ? "border-primary bg-primary/5 text-primary"
+                                : "border-border-color text-text-light hover:border-primary/50"
                             }`}
             >
               {sport.icon}
@@ -128,7 +128,7 @@ const Step1Info = ({ formData, handleChange, setFormData }) => {
           Go to Google Maps, copy the location link, and paste it here.
         </p>
       </div>
-    </form>
+    </div>
   );
 };
 export default Step1Info;
