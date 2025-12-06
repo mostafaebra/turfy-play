@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 
 import { IoIosFootball, IoIosTennisball } from "react-icons/io";
 import { MdSportsTennis } from "react-icons/md";
 import { FiLink } from "react-icons/fi";
 import { MdLocationOn } from "react-icons/md";
 
-const Step1Info = ({ formData, handleChange, setFormData }) => {
+const Step1Info = ({ formData, handleChange, handleManualChange , errors }) => {
   const sports = [
     { id: "football", name: "Football", icon: <IoIosFootball size={30} /> },
     { id: "padel", name: "Padel", icon: <MdSportsTennis size={30} /> },
@@ -28,21 +28,31 @@ const Step1Info = ({ formData, handleChange, setFormData }) => {
           value={formData.fieldName}
           onChange={handleChange}
           placeholder="e.g., Sunrise Football Court"
-          className="w-full p-3 border border-border-color rounded-lg outline-none transition-all
-                     focus:border-primary focus:ring-1 focus:ring-primary
-                     placeholder:text-gray-400 text-dark-navy"
+          className={`w-full p-3 border rounded-lg outline-none transition-all
+                    ${errors.fieldName 
+                      ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500" 
+                      : "border-border-color focus:border-primary focus:ring-1 focus:ring-primary" 
+                    }`}
         />
+        {/* if the user not write in field name */}
+        {errors.fieldName && (
+              <span className="text-xs text-red-500 font-medium">
+                  {errors.fieldName}
+              </span>
+        )}
       </div>
 
       {/* select sport by map method */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-text-dark">Sport Type</label>
+        <label className={`text-sm font-medium ${errors.sport ? "text-red-500" : "text-text-dark"}`}>
+              Sport Type
+        </label>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4" >
           {sports.map((sport) => (
             <div
               key={sport.id}
-              onClick={() => setFormData({ ...formData, sport: sport.id })}
+              onClick={() => handleManualChange("sport", sport.id)}
               className={`cursor-pointer flex flex-col items-center justify-center gap-3 p-6 rounded-xl border-2 transition-all duration-200
                             ${
                               formData.sport === sport.id
@@ -55,6 +65,11 @@ const Step1Info = ({ formData, handleChange, setFormData }) => {
             </div>
           ))}
         </div>
+        {errors.sport && (
+              <span className="text-xs text-red-500 font-medium">
+                  {errors.sport}
+              </span>
+          )}
       </div>
 
       {/* <div className="flex flex-col gap-2">
@@ -92,10 +107,18 @@ const Step1Info = ({ formData, handleChange, setFormData }) => {
           value={formData.address}
           onChange={handleChange}
           placeholder="ُEnter the full Address in the field"
-          className="w-full p-3 border border-border-color rounded-lg outline-none transition-all
-                      focus:border-primary focus:ring-1 focus:ring-primary
-                      placeholder:text-gray-400 text-dark-navy"
+          className={`w-full p-3 border rounded-lg outline-none transition-all
+                    ${errors.fieldName 
+                      ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500" 
+                      : "border-border-color focus:border-primary focus:ring-1 focus:ring-primary" 
+                    }`}
         />
+        {/* if the user not write in field name */}
+        {errors.address && (
+              <span className="text-xs text-red-500 font-medium">
+                  {errors.address}
+              </span>
+        )}
       </div>
 
       <div className="mt-8"></div>
@@ -116,12 +139,20 @@ const Step1Info = ({ formData, handleChange, setFormData }) => {
             name="mapLink"
             value={formData.mapLink}
             onChange={handleChange}
-            placeholder="Paste field location link here (e.g. https://maps.app.goo.gl/...)"
-            className="w-full pl-10 p-3 border border-border-color rounded-lg outline-none 
-                       focus:border-primary focus:ring-1 focus:ring-primary transition-all 
-                       text-dark-navy placeholder:text-gray-400"
+            placeholder="Paste field location link here..."
+            className={`w-full p-3 pl-10 border rounded-lg outline-none transition-all
+                ${errors.mapLink 
+                  ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500" 
+                  : "border-border-color focus:border-primary focus:ring-1 focus:ring-primary" 
+                }`}
           />
         </div>
+
+        {errors.mapLink && (
+          <span className="text-xs text-red-500 font-medium">
+            {errors.mapLink}
+          </span>
+        )}
 
         <p className="text-xs text-text-light flex items-center gap-1">
           <MdLocationOn className="text-primary" />

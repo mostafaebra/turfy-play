@@ -9,8 +9,8 @@ import {
   FiUploadCloud,
 } from "react-icons/fi";
 
-const Step2Media = ({ formData, setFormData }) => {
-  // hidden input to upload images
+const Step2Media = ({ formData, setFormData, errors , setErrors }) => {
+  // hidden input to upload images 
   const fileInputRef = useRef(null);
   const handleBoxClick = () => {
     fileInputRef.current.click();
@@ -31,6 +31,11 @@ const Step2Media = ({ formData, setFormData }) => {
         ...prev,
         images: [...prev.images, ...newImages],
       }));
+
+      //remve error when a user upload image
+      if (errors.images) {
+        setErrors(prev => ({ ...prev, images: null }));
+      }
     }
   };
 
@@ -41,6 +46,12 @@ const Step2Media = ({ formData, setFormData }) => {
 
     if (file) {
       setFormData((prev) => ({ ...prev, contract: file }));
+    }
+
+
+    //remve error when a user upload contract
+    if (errors.contract) {
+        setErrors(prev => ({ ...prev, contract: null }));
     }
   };
 
@@ -83,17 +94,32 @@ const Step2Media = ({ formData, setFormData }) => {
 
         <div
           onClick={handleBoxClick}
-          className="border-2 border-dashed border-gray-300 w-full h-32 md:h-64 rounded-xl
-              flex flex-col justify-center items-center cursor-pointer hover:bg-gray-100 hover:border-primary transition"
+          className={`
+              border-2 border-dashed w-full h-32 md:h-64 rounded-xl
+              flex flex-col justify-center items-center cursor-pointer transition
+              ${errors.images 
+                  ? "border-red-500 bg-red-50" // لو فيه غلط: أحمر
+                  : "border-gray-300 hover:bg-gray-100 hover:border-primary" // العادي: رمادي
+              }`}
         >
-          <FiCamera className="text-gray-400 text-lg mb-2 size-10 md:size-16" />
-          <p className="font-normal md:font-medium text-text-dark">
-            Drag & Drop Images Here
+          <FiCamera className={`text-lg mb-2 size-10 md:size-16 ${errors.images ? "text-red-400" : "text-gray-400"}`} />
+          
+          <p className={`font-normal md:font-medium ${errors.images ? "text-red-600" : "text-text-dark"}`}>
+              {errors.images ? errors.images : "Drag & Drop Images Here"}
           </p>
-          <p className="text-sm text-text-dark">
-            or <span className="text-primary text-sm">Click to Upload</span>
-          </p>
+
+          {!errors.images && (
+              <p className="text-sm text-text-dark">
+                  or <span className="text-primary text-sm">Click to Upload</span>
+              </p>
+          )}
+          
         </div>
+        {errors.images && (
+          <p className="text-xs text-red-500 mt-2 font-medium">
+              * {errors.images}
+          </p>
+        )}
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
           {/* IF No Images */}
@@ -175,14 +201,19 @@ const Step2Media = ({ formData, setFormData }) => {
           {!formData.contract && (
             <div
               onClick={() => contractInputRef.current.click()}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 hover:border-primary transition-all group"
+              className={`
+                    border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition
+                    ${errors.contract 
+                        ? "border-red-500 bg-red-50" 
+                        : "border-gray-300 hover:bg-gray-50 hover:border-primary"
+                    }`}             
             >
-              <div className="bg-gray-100 p-3 rounded-full group-hover:bg-primary/10 transition-colors">
-                <FiUploadCloud className="text-gray-400 text-2xl group-hover:text-primary" />
-              </div>
-              <p className="text-text-dark font-medium">
-                Click to upload Contract
-              </p>
+
+              <FiUploadCloud className={`text-2xl ${errors.contract ? "text-red-500" : "text-gray-400"}`} />
+              <span className={`font-medium text-sm ${errors.contract ? "text-red-600" : "text-primary"}`}>
+                {errors.contract ? errors.contract : "Upload Contract"}
+              </span>
+
               <p className="text-xs text-text-light">
                 Supported: PDF, JPG, PNG (Max 5MB)
               </p>

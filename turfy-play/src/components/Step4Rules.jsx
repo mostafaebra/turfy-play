@@ -1,6 +1,6 @@
 import React from "react";
 
-const Step4Rules = ({ formData, setFormData, handleChange }) => {
+const Step4Rules = ({ formData, setFormData, handleChange , errors }) => {
     return (
         <div className="space-y-8">
             {/* --- 1. Main Header --- */}
@@ -31,14 +31,18 @@ const Step4Rules = ({ formData, setFormData, handleChange }) => {
                                 value={formData.pricePerHour}
                                 onChange={handleChange}
                                 placeholder="250"
-                                className="w-full p-3 pr-12 border border-border-color rounded-lg outline-none focus:border-primary
-                 focus:ring-1 focus:ring-primary transition-all text-dark-navy placeholder:text-gray-400"
+                                className={`w-full p-3 pr-12 border rounded-lg outline-none transition-all text-dark-navy
+                                         ${errors.pricePerHour 
+                                         ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500" 
+                                         : "border-border-color focus:border-primary focus:ring-1 focus:ring-primary"
+                                }`}  
                             />
 
                             <span className="absolute right-4 top-3.5 text-text-light font-medium text-sm">
                                 EGP
                             </span>
                         </div>
+                        {errors.pricePerHour && <span className="text-xs text-red-500">{errors.pricePerHour}</span>}
                     </div>
                 </div>
             </div>
@@ -91,8 +95,12 @@ const Step4Rules = ({ formData, setFormData, handleChange }) => {
                             value={formData.openTime}
                             onChange={handleChange}
                             disabled={formData.open24}
-                            className="w-full p-3 border border-border-color rounded-lg outline-none focus:border-primary transition-all text-dark-navy cursor-pointer disabled:bg-gray-100"
-                        />
+                            className={`w-full p-3 border rounded-lg outline-none transition-all text-dark-navy cursor-pointer disabled:bg-gray-100
+                            ${errors.openTime 
+                                ? "border-red-500 focus:border-red-500" 
+                                : "border-border-color focus:border-primary"
+                            }`}/>
+                        {errors.openTime && <span className="text-xs text-red-500">{errors.openTime}</span>}
                     </div>
 
                     <div className="flex flex-col gap-2">
@@ -105,8 +113,12 @@ const Step4Rules = ({ formData, setFormData, handleChange }) => {
                             value={formData.closeTime}
                             onChange={handleChange}
                             disabled={formData.open24}
-                            className="w-full p-3 border border-border-color rounded-lg outline-none focus:border-primary transition-all text-dark-navy cursor-pointer disabled:bg-gray-100"
-                        />
+                            className={`w-full p-3 border rounded-lg outline-none transition-all text-dark-navy cursor-pointer disabled:bg-gray-100
+                            ${errors.closeTime 
+                                ? "border-red-500 focus:border-red-500" 
+                                : "border-border-color focus:border-primary"
+                            }`}/>
+                        {errors.closeTime && <span className="text-xs text-red-500">{errors.closeTime}</span>}
                     </div>
                 </div>
             </div>
@@ -125,17 +137,22 @@ const Step4Rules = ({ formData, setFormData, handleChange }) => {
                                 name="bookingWindow"
                                 value={formData.bookingWindow}
                                 onChange={handleChange}
-                                className="w-full p-3 border border-border-color rounded-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-dark-navy bg-white appearance-none cursor-pointer"
+                                className={`w-full p-3 border rounded-lg outline-none appearance-none cursor-pointer bg-white text-dark-navy transition-all
+                                ${errors.bookingWindow 
+                                    ? "border-red-500 focus:border-red-500" 
+                                    : "border-border-color focus:border-primary"
+                                }`}
                             >
                                 <option value="">Select window...</option>
                                 <option value="7_days">Up to 7 days in advance</option>
                                 <option value="14_days">Up to 14 days in advance</option>
                                 <option value="30_days">Up to 30 days in advance</option>
                             </select>
-                            {/* السهم المخصص */}
+                    
                             <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
                                 <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
                             </div>
+                            {errors.bookingWindow && <span className="text-xs text-red-500">{errors.bookingWindow}</span>}
                         </div>
                     </div>
 
@@ -147,7 +164,11 @@ const Step4Rules = ({ formData, setFormData, handleChange }) => {
                                 name="cancelPolicy"
                                 value={formData.cancelPolicy}
                                 onChange={handleChange}
-                                className="w-full p-3 border border-border-color rounded-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-dark-navy bg-white appearance-none cursor-pointer"
+                                className={`w-full p-3 border rounded-lg outline-none transition-all appearance-none cursor-pointer
+                                ${errors.cancelPolicy 
+                                    ? "border-red-500 focus:border-red-500" 
+                                    : "border-border-color focus:border-primary"
+                                }`}
                             >
                                 <option value="">Select policy...</option>
                                 <option value="free_24h">Free refund if cancelled 24h prior</option>
@@ -158,6 +179,7 @@ const Step4Rules = ({ formData, setFormData, handleChange }) => {
                             <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
                                 <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
                             </div>
+                            {errors.cancelPolicy && <span className="text-xs text-red-500">{errors.cancelPolicy}</span>}
                         </div>
                     </div>
                 </div>
