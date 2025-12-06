@@ -5,12 +5,34 @@ import { MdSportsTennis } from "react-icons/md";
 import { FiLink } from "react-icons/fi";
 import { MdLocationOn } from "react-icons/md";
 
-const Step1Info = ({ formData, handleChange, handleManualChange , errors }) => {
+const Step1Info = ({ formData, setFormData , handleChange, handleManualChange , errors }) => {
   const sports = [
     { id: "football", name: "Football", icon: <IoIosFootball size={30} /> },
     { id: "padel", name: "Padel", icon: <MdSportsTennis size={30} /> },
     { id: "tennis", name: "Tennis", icon: <IoIosTennisball size={30} /> },
   ];
+
+  // handle Location by GPS
+  const handleDetectLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+
+          // update x , y
+          setFormData((prev) => ({
+            ...prev,
+            coords: { x: lng, y: lat },
+            mapLink: `https://maps.google.com/?q=${lat},${lng}`,
+          }));
+        },
+        (error) => {
+          //console.error(error);
+        }
+      );
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -126,38 +148,53 @@ const Step1Info = ({ formData, handleChange, handleManualChange , errors }) => {
       {/* --- (Google Maps Link) --- */}
       <div className="flex flex-col gap-2">
         <label className="text-sm font-medium text-text-dark">
-          Google Maps Location
+          Field Location <span className="text-red-500">*</span>
         </label>
 
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FiLink className="text-gray-400 text-lg" />
+        <div className="relative group">
+          <div 
+            onClick={handleDetectLocation} 
+            className="absolute inset-y-0 left-0 pl-2 flex items-center z-10 cursor-pointer"
+            title="Click to detect location"
+          >
+            <div className={`
+                p-2 rounded-lg transition-all duration-200 flex items-center justify-center
+                ${formData.coords.x 
+                    ? "bg-primary text-white shadow-md" // لو نجح: خلفية خضراء وأيقونة بيضاء
+                    : "bg-gray-100 text-gray-500 group-hover:bg-primary group-hover:text-white" // العادي: رمادي ولما تقف عليه يخضر
+                }`}
+            >
+                <MdLocationOn size={18} />
+            </div>
           </div>
 
-          <input
-            type="url"
-            name="mapLink"
-            value={formData.mapLink}
-            onChange={handleChange}
-            placeholder="Paste field location link here..."
-            className={`w-full p-3 pl-10 border rounded-lg outline-none transition-all
-                ${errors.mapLink 
-                  ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500" 
-                  : "border-border-color focus:border-primary focus:ring-1 focus:ring-primary" 
-                }`}
+          {/* display only */}
+         <input
+            type="text"
+            readOnly
+            onClick={handleDetectLocation}
+            value={
+              formData.coords.x 
+                ? "Location Detected Successfully" 
+                : ""
+            }
+            placeholder="Tap to detect GPS location"
+            className={`w-full p-3 pl-14 border rounded-lg outline-none cursor-pointer font-medium text-sm transition-all
+                ${formData.coords.x 
+                    ? "bg-green-50 text-green-700 border-green-500" 
+                    : "bg-white text-dark-navy border-border-color focus:border-primary group-hover:border-primary"
+                }
+                ${errors.mapLink ? "border-red-500 bg-red-50 text-red-700" : ""}
+            `}
           />
         </div>
 
         {errors.mapLink && (
           <span className="text-xs text-red-500 font-medium">
-            {errors.mapLink}
+            Location is required. Tap the icon to detect.
           </span>
         )}
-
-        <p className="text-xs text-text-light flex items-center gap-1">
-          <MdLocationOn className="text-primary" />
-          Go to Google Maps, copy the location link, and paste it here.
-        </p>
+        
       </div>
     </div>
   );
