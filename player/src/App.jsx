@@ -5,7 +5,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/home/home.jsx";
 import Login from "./pages/login/login.jsx";
 import SignUp from "./pages/signup/signup.jsx";
-import AddNewField from "./pages/addNewField/AddNewField.jsx";
 
 function App() {
   return (
@@ -17,7 +16,6 @@ function App() {
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/add-field" element={<AddNewField />} />
 
         {/* Catch-all: Redirect unknown URLs back to Home */}
         <Route path="*" element={<Navigate to="/" replace />} />
