@@ -4,10 +4,11 @@ import { FiBell, FiHelpCircle } from "react-icons/fi";
 
 const Navbar = () => {
   return (
-    <nav className="bg-slate-900 text-white h-20 mx-auto px-4 sm:px-6 lg:px-8 flex 
+    <nav
+      className="bg-slate-900 text-white h-20 mx-auto px-4 sm:px-6 lg:px-8 flex 
         items-center justify-between shadow-lg 
-       ">
-
+       "
+    >
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg text-2xl">⚽</div>
         <h1 className="text-2xl font-bold tracking-wide">Turfy Play</h1>
@@ -17,7 +18,7 @@ const Navbar = () => {
         <button className="hover:text-emerald-400 transition-colors duration-200">
           <FiBell size={24} />
         </button>
-        
+
         <button className="hover:text-emerald-400 transition-colors duration-200">
           <FiHelpCircle size={24} />
         </button>
