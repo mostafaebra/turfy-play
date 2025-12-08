@@ -21,22 +21,17 @@ const Step1Info = ({
   // handle Location by GPS
   const handleDetectLocation = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
+      navigator.geolocation.getCurrentPosition((position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
 
-          // update x , y
-          setFormData((prev) => ({
-            ...prev,
-            coords: { x: lng, y: lat },
-            mapLink: `https://maps.google.com/?q=${lat},${lng}`,
-          }));
-        },
-        (error) => {
-          //console.error(error);
-        }
-      );
+        // update x , y
+        setFormData((prev) => ({
+          ...prev,
+          coords: { x: lng, y: lat },
+          mapLink: `https://maps.google.com/?q=${lat},${lng}`,
+        }));
+      });
     }
   };
 
