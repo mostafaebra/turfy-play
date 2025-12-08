@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-//import axios from 'axios';
+
 import { FiArrowRight, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
+import { createFieldRequest } from "../../services/fieldService";
 
 import {
   SportTypeMapping,
@@ -163,7 +164,7 @@ const AddNewField = () => {
     // for string input
     payload.append("FieldViewModel.FieldName", formData.fieldName);
     payload.append("FieldViewModel.Address", formData.address);
-    payload.append("FieldViewModel.LocationUrl", formData.mapLink);
+    // payload.append("FieldViewModel.LocationUrl", formData.mapLink);
     payload.append("FieldViewModel.FieldSize", formData.fieldSize || "");
     payload.append(
       "FieldViewModel.FieldDescription",
@@ -219,13 +220,28 @@ const AddNewField = () => {
     // Files
 
     // cover photo
-    if (formData.images.length > 0) {
-      payload.append("FieldViewModel.FieldCardImage", formData.images[0].file);
-    }
+    // if (formData.images.length > 0) {
+    //   payload.append("FieldViewModel.FieldCardImage", formData.images[0].file);
+    // }
 
-    // other images
-    for (let i = 1; i < formData.images.length; i++) {
-      payload.append("FieldImages", formData.images[i].file);
+    // // other images
+    // for (let i = 1; i < formData.images.length; i++) {
+    //   payload.append("FieldImages", formData.images[i].file);
+    // }
+    if (formData.images.length > 0) {
+      // first imgae used a cover
+      payload.append("FieldViewModel.FieldCardImage", formData.images[0].file);
+
+      // 2.FieldImages
+      if (formData.images.length === 1) {
+        // if the user upload one image ---> add this img into fieldimages and cover
+        payload.append("FieldImages", formData.images[0].file);
+      } else {
+        // if the user upload more than one image
+        for (let i = 1; i < formData.images.length; i++) {
+          payload.append("FieldImages", formData.images[i].file);
+        }
+      }
     }
 
     // ContractImages
@@ -239,38 +255,28 @@ const AddNewField = () => {
       console.log(`${pair[0]}:`, pair[1]);
     }
 
-    setTimeout(() => {
-      setIsSubmitted(true);
-      window.scrollTo(0, 0);
-    }, 1000);
+    // setTimeout(() => {
+    //   setIsSubmitted(true);
+    //   window.scrollTo(0, 0);
+    // }, 1000);
 
-    /*
     try {
-      const response = await axios.post(
-        "RABET_EL_BACKEND_HENA"
-        payload, // 👈 دي الشنطة اللي فيها البيانات والصور
-        {
-         headers: {
-            "Content-Type": "multipart/form-data", 
-          },
-        }
-      );
+      const TOKEN =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI1ZjhmYWQ1Yi1kOWNiLTQ2OWYtYTE2NS03MDg2NzcyODk1MGUiLCJ1bmlxdWVfbmFtZSI6IlppYWRBdHRhIiwianRpIjoiNjRjN2YxYmEtZTFjOC00NTc3LWE1YzQtNGVhOTFkMWE5ZWQ1Iiwicm9sZSI6Ik93bmVyIiwibmJmIjoxNzY1MTUxMTU4LCJleHAiOjE3NjUxNTQ3NTgsImlhdCI6MTc2NTE1MTE1OCwiaXNzIjoiVHVyZnlQbGF5IiwiYXVkIjoiVHVyZnlQbGF5LUZyb250In0.AVYrF5M9ziVCDC1yB5tsrG8kmtnjg5y1aMBNLf11EnU"; // توكن التجربة
 
-      console.log(response.data);
-        
-      setIsSubmitted(true); 
-      window.scrollTo(0, 0);
+      const responseData = await createFieldRequest(payload, TOKEN);
 
+      if (responseData.isSuccess === true) {
+        setIsSubmitted(true);
+        window.scrollTo(0, 0);
+      }
+      // else {
+      //     console.error("⚠️ السيرفر رفض البيانات:", responseData);
+      //     alert(`خطأ في البيانات: ${responseData.message}`); // اعرض الرسالة اللي راجعة (Sport Type must not be empty)
+      // }
     } catch (error) {
-        console.error("Error X", error);
-
-        if (error.response) {
-            console.log("error data:", error.response.data);
-            alert(`: ${JSON.stringify(error.response.data)}`); 
-        } else {
-            alert("error in server");
-        }
-    }*/
+      console.error(" Error ❌ ", error);
+    }
   };
 
   const handleNext = () => {
