@@ -41,26 +41,26 @@ const Step2Media = ({ formData, setFormData, errors , setErrors }) => {
 
   // hidden input file contract
   const contractInputRef = useRef(null);
-  const handleContractUpload = (e) => {
-    const file = e.target.files[0];
+  // const handleContractUpload = (e) => {
+  //   const file = e.target.files[0];
 
-    if (file) {
-      setFormData((prev) => ({ ...prev, contract: file }));
-    }
+  //   if (file) {
+  //     setFormData((prev) => ({ ...prev, contract: file }));
+  //   }
 
 
-    //remve error when a user upload contract
-    if (errors.contract) {
-        setErrors(prev => ({ ...prev, contract: null }));
-    }
-  };
+  //   //remve error when a user upload contract
+  //   if (errors.contract) {
+  //       setErrors(prev => ({ ...prev, contract: null }));
+  //   }
+  // };
 
   // remove file if he want upload another file
-  const removeContract = () => {
-    setFormData((prev) => ({ ...prev, contract: null }));
+  // const removeContract = () => {
+  //   setFormData((prev) => ({ ...prev, contract: null }));
 
-    if (contractInputRef.current) contractInputRef.current.value = "";
-  };
+  //   if (contractInputRef.current) contractInputRef.current.value = "";
+  // };
 
   return (
     <div className="space-y-6">
@@ -172,80 +172,85 @@ const Step2Media = ({ formData, setFormData, errors , setErrors }) => {
         </div>
       </div>
 
-      {/* upload Ownership Proof / Contract */}
-      <div className="mt-8 border-t border-gray-100 pt-8">
-        <div>
-          <div className="flext justify-between">
-            <h2 className="text-text-dark font-medium md:font-bold text-xl">
-              Ownership Proof / Contract
-            </h2>
-            {/* <button className="hover:text-emerald-400 transition-colors duration-200">
-                      <FiHelpCircle size={14} />
-            </button> */}
-          </div>
-          <p className="text-text-light mb-3 text-xs md:text-xl">
-            Please upload a clear copy of your field's rental contract or
-            ownership deed. This is required for verification purposes only and
-            will not be shown to the public.
-          </p>
+      {/*  Contract Section (Multiple Images) */}
+      <div className="pt-6 border-t border-gray-100">
+        <h3 className="text-text-dark font-bold text-lg mb-1 flex items-center gap-2">
+            Ownership Proof
+            <span className="text-gray-400 text-xs font-normal border border-gray-200 px-1.5 py-0.5 rounded-full">Images Only</span>
+        </h3>
+        <p className="text-text-light text-sm mb-4">Upload contract or ownership deed pages.</p>
 
-          <input
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
+        {/* upload only images */}
+        <input 
+            type="file" 
+            multiple 
+            accept="image/*" 
             className="hidden"
-            ref={contractInputRef}
-            onChange={handleContractUpload}
-          />
+            ref={contractInputRef} 
+            onChange={(e) => {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) {
+                    setFormData(prev => ({ 
+                        ...prev, 
+                        contract: [...prev.contract, ...files] 
+                    }));
+                    
+                    if (errors.contract) setErrors(prev => ({ ...prev, contract: null }));
+                }
+            }}
+        />
 
-          {/* if no file upload */}
-          {!formData.contract && (
-            <div
-              onClick={() => contractInputRef.current.click()}
-              className={`
-                    border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition
-                    ${errors.contract 
-                        ? "border-red-500 bg-red-50" 
-                        : "border-gray-300 hover:bg-gray-50 hover:border-primary"
-                    }`}             
-            >
-
-              <FiUploadCloud className={`text-2xl ${errors.contract ? "text-red-500" : "text-gray-400"}`} />
-              <span className={`font-medium text-sm ${errors.contract ? "text-red-600" : "text-primary"}`}>
-                {errors.contract ? errors.contract : "Upload Contract"}
-              </span>
-
-              <p className="text-xs text-text-light">
-                Supported: PDF, JPG, PNG (Max 5MB)
-              </p>
+        {/* upload button */}
+        <div 
+            onClick={() => contractInputRef.current.click()}
+            className={`
+                border-2 border-dashed rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer transition mb-4
+                ${errors.contract 
+                    ? "border-red-500 bg-red-50" 
+                    : "border-gray-300 hover:bg-gray-50 hover:border-primary"
+                }
+            `}
+        >
+            <div className="flex items-center gap-2 text-text-light group-hover:text-primary">
+                <FiUploadCloud className={`text-xl ${errors.contract ? "text-red-500" : ""}`} />
+                <span className={`font-medium text-sm ${errors.contract ? "text-red-600" : ""}`}>
+                    {errors.contract ? errors.contract : "Click to upload Contract Images"}
+                </span>
             </div>
-          )}
-
-          {/* files Uploaded */}
-          {formData.contract && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg p-4 gap-3">
-              <div className="flex items-center gap-3 w-full">
-                <div className="bg-white p-2 rounded-full shadow-sm shrink-0">
-                  <FiCheckCircle className="text-emerald-500 text-xl" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-emerald-800 font-medium text-sm truncate">
-                    {formData.contract.name}
-                  </p>
-                  <p className="text-emerald-600 text-xs">Upload successful</p>
-                </div>
-              </div>
-
-              {/* delete file */}
-              <button
-                type="button"
-                onClick={removeContract}
-                className="text-red-500 text-sm font-medium hover:underline hover:text-red-600 self-end sm:self-auto"
-              >
-                Remove
-              </button>
-            </div>
-          )}
         </div>
+
+        {/* Show files */}
+        {formData.contract.length > 0 && (
+            <div className="flex flex-col gap-2">
+                {formData.contract.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                        
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="bg-white p-1.5 rounded-full shadow-sm shrink-0">
+                                <FiCheckCircle className="text-emerald-500 text-lg" />
+                            </div>
+                            <span className="text-emerald-900 text-sm font-medium truncate">
+                                {file.name}
+                            </span>
+                        </div>
+
+                        {/* delete button */}
+                        <button 
+                            type="button"
+                            onClick={() => {
+                                
+                                const newContracts = formData.contract.filter((_, i) => i !== index);
+                                setFormData(prev => ({ ...prev, contract: newContracts }));
+                            }}
+                            className="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition"
+                        >
+                            <FiTrash2 size={16} />
+                        </button>
+                    </div>
+                ))}
+            </div>
+        )}
+
       </div>
     </div>
   );

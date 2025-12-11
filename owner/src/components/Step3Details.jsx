@@ -7,7 +7,7 @@ import {
   FiWifi,
   FiUnlock,
   FiCoffee,
-} from "react-icons/fi"; // أيقونات مقترحة
+} from "react-icons/fi"; 
 import { MdOutlineShower, MdDirectionsCar } from "react-icons/md";
 
 const amenitiesList = [
@@ -25,7 +25,7 @@ const amenitiesList = [
   { id: "cafe", label: "Cafeteria", icon: <FiCoffee size={20} /> },
 ];
 
-const Step3Details = ({ formData, setFormData, handleChange }) => {
+const Step3Details = ({ formData, setFormData, handleChange , errors }) => {
   const toggleAmenity = (id) => {
     setFormData((prev) => {
       const currentAmenities = prev.amenities || [];
@@ -60,7 +60,7 @@ const Step3Details = ({ formData, setFormData, handleChange }) => {
         </h2>
       </div>
 
-      {/* --- 2. Field Condition Section --- */}
+      {/*  Field Condition Section  */}
       <div>
         {/* Section Title */}
         <h3 className="text-text-dark font-bold text-lg mb-4">
@@ -80,9 +80,15 @@ const Step3Details = ({ formData, setFormData, handleChange }) => {
                 name="surfaceType"
                 value={formData.surfaceType}
                 onChange={handleChange}
-                className="w-full p-3 border border-border-color rounded-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-dark-navy bg-white appearance-none cursor-pointer"
+                className={`w-full p-3 border rounded-lg outline-none appearance-none cursor-pointer bg-white text-dark-navy transition-all
+                    ${formData.surfaceType === "" ? "text-gray-400" : "text-dark-navy"}
+                    ${errors?.surfaceType 
+                        ? "border-red-500 focus:border-red-500" 
+                        : "border-border-color focus:border-primary"
+                    }`}
               >
-                {surfaceTypes.map((type, index) => (
+              <option value="" disabled>Select surface...</option>
+              {surfaceTypes.map((type, index) => (
                   <option key={index} value={type}>
                     {type}
                   </option>
@@ -95,22 +101,63 @@ const Step3Details = ({ formData, setFormData, handleChange }) => {
                   <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                 </svg>
               </div>
+              {errors?.surfaceType && (
+                <span className="text-xs text-red-500 font-medium">{errors.surfaceType}</span>
+              )}
             </div>
           </div>
 
-          {/* Field Size Input */}
+          
+          {/* 1. Field Format (Important for Filters) */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-text-dark">
-              Field Size / Format{" "}
-              <span className="text-gray-400 font-normal">(Optional)</span>
+              Field Format <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <select
+                name="fieldFormat"
+                value={formData.fieldFormat}
+                onChange={handleChange}
+                className={`w-full p-3 border rounded-lg outline-none appearance-none cursor-pointer bg-white text-dark-navy transition-all
+                  ${formData.fieldFormat === "" ? "text-gray-400" : "text-dark-navy"}
+                    ${errors?.fieldFormat 
+                        ? "border-red-500 focus:border-red-500"   
+                        : "border-border-color focus:border-primary" 
+                    }`}
+              >
+                <option value="" disabled>Select format (e.g. 5v5)</option>
+                <option value="5v5">5-a-side (5v5)</option>
+                <option value="7v7">7-a-side (7v7)</option>
+                <option value="9v9">9-a-side (9v9)</option>
+                <option value="11v11">11-a-side (11v11)</option>
+                <option value="Tennis Singles">Tennis Singles</option>
+                <option value="Tennis Doubles">Tennis Doubles</option>
+                <option value="Padel Standard">Padel Standard</option>
+              </select>
+
+              <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+              </div>
+              {errors?.fieldFormat && (
+                <span className="text-xs text-red-500 font-medium">
+                    {errors.fieldFormat}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* 2. Field Size (Optional) */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-text-dark">
+              Field Dimensions <span className="text-gray-400 font-normal">(Optional)</span>
             </label>
             <input
               type="text"
               name="fieldSize"
               value={formData.fieldSize}
               onChange={handleChange}
-              placeholder="e.g., 5-a-side, 7-a-side, 40x20m"
-              className="w-full p-3 border border-border-color rounded-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-dark-navy placeholder:text-gray-400"
+              placeholder="e.g., 40x20 meters"
+              className="w-full p-3 border border-border-color rounded-lg outline-none focus:border-primary transition-all text-dark-navy placeholder:text-gray-400"
             />
           </div>
         </div>
