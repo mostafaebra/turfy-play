@@ -17,7 +17,6 @@ function App() {
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
-        
 
         {/* Catch-all: Redirect unknown URLs back to Home */}
         <Route path="*" element={<Navigate to="/" replace />} />
