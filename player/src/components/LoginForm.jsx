@@ -17,8 +17,8 @@ export default function LoginForm() {
     setError("");
     setLoading(true);
     console.log({
-  emailOrPhone: email,
-  password,
+   emailOrPhone: email,
+    password,
   discriminator: 2
     })
 

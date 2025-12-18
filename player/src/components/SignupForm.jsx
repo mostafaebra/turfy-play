@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-
+import { useNavigate } from "react-router-dom";
  
 const SIGNUP_URL = "http://turfytesting.runasp.net/Turfy/RegisterPlayerEndpoint/NewRegisterPlayer"; 
 
@@ -16,7 +16,7 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
+  const navigate = useNavigate();
   
   const [passwordStrength, setPasswordStrength] = useState(0); 
   const calculateStrength = (pass) => {
@@ -66,11 +66,16 @@ export default function SignupForm() {
         },
       });
 
-      console.log("Signup success:", response.data);
-      setSuccess("Account created successfully! Redirecting...");
-      
 
-    } catch (err) {
+       if (response.data.isSuccess) {
+        navigate("/login");
+        console.log("Signup success:", response.data);
+        setSuccess("Account created successfully! Redirecting...");
+       }else {
+        setError(response.data.message || "فشلت العملية، تأكد من صحة البيانات.");
+      }
+      
+     } catch (err) {
       console.error("Signup failed:", err.response || err);
       
       setError(

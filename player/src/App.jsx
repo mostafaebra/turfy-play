@@ -6,6 +6,10 @@ import Home from "./pages/home/home.jsx";
 import Login from "./pages/login/login.jsx";
 import SignUp from "./pages/signup/signup.jsx";
 import Filterpage from "./pages/filterpage/filterpage.jsx";
+import ForgotPassword from "./pages/PasswordReset/ForgetPassword.jsx";
+import VerifyCodePage from "./pages/PasswordReset/VerifyCodePage.jsx";
+import SetNewPasswordPage from "./pages/PasswordReset/SetPasswordPage.jsx";
+import ResetSuccessPage from "./pages/PasswordReset/ResetSuccessPage.jsx";
 
 function App() {
   return (
@@ -17,6 +21,10 @@ function App() {
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-code" element={<VerifyCodePage />} />
+        <Route path="/set-new-password" element={<SetNewPasswordPage />} />
+        <Route path="/reset-success" element={<ResetSuccessPage />} />
         
 
         {/* Catch-all: Redirect unknown URLs back to Home */}
