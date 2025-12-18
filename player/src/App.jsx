@@ -1,27 +1,31 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 // Import your pages
 import Home from "./pages/home/home.jsx";
 import Login from "./pages/login/login.jsx";
 import SignUp from "./pages/signup/signup.jsx";
 import Filterpage from "./pages/filterpage/filterpage.jsx";
+import FieldDetails from './pages/FieldDetails/FieldDetails.jsx';
+import BookingPage from './pages/Booking/BookingPage';
+import ReportIssue from './pages/ReportIssue/ReportIssue.jsx' 
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* The "index" route - what you see at http://localhost:5173/ */}
-        <Route path="/" element={<Filterpage />} />
+    <Routes>
 
-        {/* Auth Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
+      <Route path="/" element={<Filterpage />} />
 
-        {/* Catch-all: Redirect unknown URLs back to Home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+      <Route path="/details/:id" element={<FieldDetails />} />     
+      
+      <Route path="/booking" element={<BookingPage />} />
+
+      {/* 👇👇 ضيف السطر ده هنا 👇👇 */}
+      <Route path="/report-issue" element={<ReportIssue />} />
+
+      {/* خلي بالك: السطر بتاع النجمة (*) ده لازم يفضل آخر واحد دايماً */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

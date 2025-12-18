@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const BASE_URL = "http://turfywafaa.runasp.net/Turfy/FilterFieldsEndpoint/Filter";
 
+// field view details
+const DETAILS_URL = "http://turfy.runasp.net/Turfy/GetByIdFieldEndpoint/Execute";
 
 const SPORT_TYPE_MAP = {
   "Soccer": 0, // Football in C# 
@@ -150,3 +152,24 @@ export const fetchFilteredFields = async (filters, cursor = null) => {
     throw error;
   }
 };
+
+
+
+
+// field view details
+
+export const getFieldDetails = async (id) => {
+    try {
+        const response = await axios.get(DETAILS_URL, {
+            params: { 
+                FieldId: id 
+            } 
+        });
+        return response.data; 
+    } catch (error) {
+        console.error("API Error Link:", DETAILS_URL);
+        console.error("API Error Params:", { FieldId: id });
+        console.error("API Error Details:", error);
+        throw error;
+    }
+}

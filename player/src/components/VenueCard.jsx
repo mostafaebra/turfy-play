@@ -1,7 +1,31 @@
 import React from 'react';
 import { Star, MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; 
 
 const VenueCard = ({ venue }) => {
+  const navigate = useNavigate(); 
+
+
+  const handleQuickBook = (e) => {
+    e.preventDefault(); // 🛑 prevent book button to datails page
+    e.stopPropagation();
+
+
+    const today = new Date();
+    const formattedDate = today.toISOString().split('T')[0];
+
+    // 
+    navigate('/booking', {
+      state: {
+        fieldId: venue.id,
+        fieldName: venue.name,
+        pricePerHour: venue.price,
+        image: venue.image,
+        selectedDate: formattedDate // 📅 Today Date
+      }
+    });
+  };
+
   return (
     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full group">
       {/* Image Area */}
@@ -42,7 +66,12 @@ const VenueCard = ({ venue }) => {
                 ${venue.price} 
                 <span className="text-gray-400 font-normal text-[9px] md:text-xs ml-1">/hr</span>
             </span>
-            <button className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg text-xs md:text-base font-bold transition-all shadow-emerald-200 shadow-md">
+            
+            {/* link book button with Booking Page */}
+            <button 
+                onClick={handleQuickBook}
+                className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg text-xs md:text-base font-bold transition-all shadow-emerald-200 shadow-md"
+            >
                 Book
             </button>
         </div>
