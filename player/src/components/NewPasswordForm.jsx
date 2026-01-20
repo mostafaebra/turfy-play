@@ -63,7 +63,8 @@ export default function NewPasswordForm() {
       Email: email,
       NewPassword: newPassword,
       ConfirmPassword: confirmNewPassword,
-      ResetToken: resetToken
+      ResetToken: resetToken ,
+      Discriminator : 3 ,
     };
 
     try {

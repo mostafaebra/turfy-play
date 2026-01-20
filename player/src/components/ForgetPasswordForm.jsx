@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { FiArrowLeft } from "react-icons/fi";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";  
+
 
 export default function ForgetPasswordForm() {
   const [identifier, setIdentifier] = useState("");
@@ -20,7 +22,8 @@ export default function ForgetPasswordForm() {
       const response = await axios.post(
         "http://turfywafaa.runasp.net/Turfy/RequestPasswordResetEndpoint/ResetPassword",
         {
-          Email: identifier
+          Email: identifier ,
+          Discriminator : 3
         },
         {
           headers: {
@@ -81,13 +84,13 @@ export default function ForgetPasswordForm() {
           {loading ? "Sending..." : "Send Reset Link / OTP"}
         </button>
 
-        <a
-          href="#"
+        <Link
+          to="/login"
           className="flex items-center justify-center gap-2 text-sm text-secondary hover:text-secondary/80 transition"
         >
           <FiArrowLeft size={16} />
           Back to Login
-        </a>
+        </Link>
       </form>
     </div>
   );

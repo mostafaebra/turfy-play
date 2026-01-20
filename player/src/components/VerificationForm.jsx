@@ -55,6 +55,7 @@ export default function VerificationForm({}) {
       {
         Email: Email,
         code: verificationCode,
+        Discriminator : 3
       },
       { headers: { "Content-Type": "application/json" } }
     );

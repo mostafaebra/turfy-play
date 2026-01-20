@@ -1,15 +1,18 @@
 import React from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
+import { Link } from "react-router-dom";
 export default function SignupFooter() {
   return (
     <div className="flex flex-col gap-3 font-display mt-4">
       {/* Already have an account? */}
       <p className="text-sm text-center text-light">
         Already have an account?{" "}
-        <a href="#" className="text-secondary font-medium hover:underline">
+        <Link to="/login"
+             className="text-secondary font-medium hover:underline"
+             >
           Log In
-        </a>
+        </Link>
       </p>
 
       {/* Divider */}

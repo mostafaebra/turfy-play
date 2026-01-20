@@ -3,6 +3,7 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
 import axios from "axios";
+import { Link } from "react-router-dom";  
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -90,9 +91,12 @@ export default function LoginForm() {
       </label>
 
       {/* Forgot password */}
-      <a className="text-xs text-secondary text-right hover:underline -mt-2 cursor-pointer">
-        Forgot password?
-      </a>
+     <Link 
+          to="/forgot-password" 
+          className="text-xs text-secondary text-right hover:underline -mt-2 cursor-pointer"
+        >
+            Forgot password?
+     </Link>
 
       {/* Error */}
       {error && (
