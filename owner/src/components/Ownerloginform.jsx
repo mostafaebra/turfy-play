@@ -14,8 +14,8 @@ export default function OwnerloginForm() {
 
   try {
     const response = await axios.post("http://turfyplaydev.runasp.net/Turfy/loginuserendpoint/handle", {
-      "emailOrphone": "01551996662",
-      "password": "12345678",
+      "emailOrphone": email,
+      "password": password,
       "discriminator": 1 , // owner
     });
 
