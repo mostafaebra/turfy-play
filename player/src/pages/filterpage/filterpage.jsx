@@ -7,6 +7,8 @@ import VenueSkeleton from '../../components/VenueSkeleton';
 import Pagination from '../../components/Pagination';
 import { X, SlidersHorizontal, List, Map } from 'lucide-react';
 import { fetchFilteredFields, getSportNameFromByte } from '../../services/fieldService';
+import { Link } from 'react-router-dom';
+
 
 // Map API response fields to VenueCard expected format
 // Backend returns: FieldId, Name, Price, location, Rate, ImageURL, SportType (byte), Dis
@@ -348,7 +350,12 @@ const Filterpage = () => {
                     Array(8).fill(null).map((_, i) => <VenueSkeleton key={`skeleton-${i}`} />)
                 ) : (
                     currentData.length > 0 ? (
-                        currentData.map((venue) => <VenueCard key={venue.id} venue={venue} />)
+                        currentData.map((venue) => (
+                            // 👇 HERE IS THE CHANGE: Wrapped VenueCard in Link
+                            <Link key={venue.id} to={`/details/${venue.id}`} className="block h-full group">
+                                <VenueCard venue={venue} />
+                            </Link>
+                        ))
                     ) : (
                         <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
                             <div className="mb-4 text-6xl opacity-50">🏟️</div>
