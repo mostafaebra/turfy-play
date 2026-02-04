@@ -1,43 +1,84 @@
-import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import React from 'react';
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 
 // Import Pages
-import Home from "./pages/home/home.jsx";
+import Filterpage from './pages/filterpage/filterpage.jsx';
 import Login from "./pages/login/login.jsx";
 import SignUp from "./pages/signup/signup.jsx";
-import Filterpage from "./pages/filterpage/filterpage.jsx";
 import FieldDetails from './pages/FieldDetails/FieldDetails.jsx';
-import BookingPage from './pages/Booking/BookingPage';
-import ReportIssue from './pages/ReportIssue/ReportIssue.jsx';
-
-// Import Auth & Password Pages
 import ForgotPassword from "./pages/PasswordReset/ForgetPassword.jsx";
-import VerifyCodePage from "./pages/PasswordReset/VerifyCodePage.jsx";
-import SetNewPasswordPage from "./pages/PasswordReset/SetPasswordPage.jsx";
-import ResetSuccessPage from "./pages/PasswordReset/ResetSuccessPage.jsx";
+import WalletPage from "./pages/account/WalletPage.jsx"
+
+import BookingPage from "./pages/Booking/BookingPage.jsx"; 
+
+// --- ROOT LAYOUT ---
+const RootLayout = () => {
+  return (
+    <div className="antialiased text-slate-900">
+      <Outlet />
+    </div>
+  );
+};
+
+// --- ROUTER CONFIGURATION ---
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      {
+        path: "/",
+        element: <Filterpage />, // Landing Page
+      },
+      {
+        path: "/login",
+        element: <Login />,
+      },
+      {
+        path: "/signup",
+        element: <SignUp />,
+      },
+      {
+        path: "/details/:id",
+        element: <FieldDetails />,
+      },
+      // 👇 THIS IS THE MISSING ROUTE 👇
+      {
+        path: "/booking/:id/:date",
+        element: <BookingPage />,
+      },
+      // 👆 -------------------------- 👆
+      {
+        path: "/forgot-password",
+        element: <ForgotPassword />,
+      },
+      {
+        path: "/bookings",
+        element: <div className="p-10 text-center">My Bookings Page (Coming Soon)</div>,
+      },
+      {
+        path: "/wallet",
+        element: <WalletPage/>,
+      },
+      {
+        path: "/account",
+        element: <div className="p-10 text-center">My Account Page (Coming Soon)</div>, 
+      },
+      // Catch-all route: redirects unknown paths to home
+      {
+        path: "*",
+        element: <Navigate to="/" replace />,
+      }
+    ]
+  }
+]);
 
 function App() {
   return (
-    <Routes>
-      {/* Main Route */}
-      <Route path="/" element={<Filterpage />} />
-
-      {/* Auth Routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<SignUp />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/verify-code" element={<VerifyCodePage />} />
-      <Route path="/set-new-password" element={<SetNewPasswordPage />} />
-      <Route path="/reset-success" element={<ResetSuccessPage />} />
-
-      {/* Feature Routes */}
-      <Route path="/details/:id" element={<FieldDetails />} />     
-      <Route path="/booking" element={<BookingPage />} />
-      <Route path="/report-issue" element={<ReportIssue />} />
-
-      {/* Fallback Route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
 }
 
