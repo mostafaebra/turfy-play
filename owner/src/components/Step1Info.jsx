@@ -169,8 +169,8 @@ const Step1Info = ({
                 p-2 rounded-lg transition-all duration-200 flex items-center justify-center
                 ${
                   formData.coords.x
-                    ? "bg-primary text-white shadow-md" // لو نجح: خلفية خضراء وأيقونة بيضاء
-                    : "bg-gray-100 text-gray-500 group-hover:bg-primary group-hover:text-white" // العادي: رمادي ولما تقف عليه يخضر
+                    ? "bg-primary text-white shadow-md" // 
+                    : "bg-gray-100 text-gray-500 group-hover:bg-primary group-hover:text-white" // 
                 }`}
             >
               <MdLocationOn size={18} />

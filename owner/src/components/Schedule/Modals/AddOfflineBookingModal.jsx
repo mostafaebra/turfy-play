@@ -1,181 +1,222 @@
-import React, { useState, useEffect } from 'react';
-import { X, Clock } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { X, Save, Loader2, Clock, DollarSign, User, Phone, Calendar } from "lucide-react";
+import { addOfflineBooking } from "../../../services/api";
 
-const AddOfflineBookingModal = ({ isOpen, onClose, slotData, fullSchedule }) => {
-  const [duration, setDuration] = useState(1);
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [maxDuration, setMaxDuration] = useState(1);
+const AddOfflineBookingModal = ({ isOpen, onClose, slotData, selectedDate, fieldId, fullSchedule, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
+  const [maxDuration, setMaxDuration] = useState(1); 
+  
+  const [formData, setFormData] = useState({
+    playerName: "",
+    phoneNumber: "",
+    price: "",
+    duration: 1, 
+    startTime: ""
+  });
 
-  // 1. Initialize modal state when opened
+  // 1️⃣ حساب الساعات المتاحة (Logic)
   useEffect(() => {
     if (isOpen && slotData && fullSchedule) {
-      setDuration(1);
-      setTotalPrice(slotData.price);
-      calculateMaxDuration();
-    }
-  }, [isOpen, slotData]);
+      const timeParts = slotData.realTime24 ? slotData.realTime24.split(':') : ["09", "00"];
+      const formattedTime = `${timeParts[0]}:${timeParts[1]}`;
+      const currentHour = parseInt(timeParts[0]);
 
-  // 2. Calculate available slots ahead for duration logic
-  const calculateMaxDuration = () => {
-    let count = 1;
-    // Find current slot index
-    const currentIndex = fullSchedule.findIndex(s => s.id === slotData.id);
-    
-    // Check subsequent slots for availability
-    for (let i = currentIndex + 1; i < fullSchedule.length; i++) {
-      if (fullSchedule[i].status === 'available') {
-        count++;
-      } else {
-        break; // Stop at first non-available slot
+      let availableHours = 0;
+      
+      const upcomingSlots = fullSchedule.filter(s => {
+        const h = parseInt(s.time.split(':')[0]); 
+        const hour24 = s.ampm === "PM" && h !== 12 ? h + 12 : (s.ampm === "AM" && h === 12 ? 0 : h);
+        return hour24 >= currentHour;
+      });
+
+      for (let slot of upcomingSlots) {
+        if (slot.status === "available") {
+          availableHours += 1;
+        } else {
+          break; 
+        }
       }
-    }
-    // Limit max booking duration (e.g., 5 hours)
-    setMaxDuration(Math.min(count, 5));
-  };
 
-  // 3. Update price when duration changes
-  const handleDurationChange = (e) => {
-    const newDuration = parseInt(e.target.value);
-    setDuration(newDuration);
-    setTotalPrice(slotData.price * newDuration);
-  };
+      const safeMax = availableHours > 0 ? availableHours : 1;
+      setMaxDuration(safeMax);
+
+      setFormData({
+        playerName: "",
+        phoneNumber: "",
+        price: slotData.price && slotData.price !== '-' ? slotData.price : "", 
+        duration: 1, 
+        startTime: formattedTime
+      });
+    }
+  }, [isOpen, slotData, fullSchedule]);
+
+  // 2️⃣ تحديث السعر مع المدة
+  useEffect(() => {
+    if (slotData?.price && !isNaN(slotData.price)) {
+      const unitPrice = parseFloat(slotData.price);
+      const newPrice = unitPrice * formData.duration;
+      setFormData(prev => ({ ...prev, price: newPrice }));
+    }
+  }, [formData.duration, slotData]);
 
   if (!isOpen) return null;
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    let newValue = value;
+
+    if (name === "duration") {
+      const numValue = parseInt(value);
+      if (numValue > maxDuration) newValue = maxDuration;
+      else if (numValue < 1) newValue = 1;
+      else if (isNaN(numValue)) newValue = "";
+    }
+    setFormData(prev => ({ ...prev, [name]: newValue }));
+  };
+
+  // 👇 دالة الإرسال 👇
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!fieldId) {
+      alert("❌ خطأ: لم يتم تحديد الملعب! تأكد من اختيار ملعب من القائمة.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // ✅ نستخدم fieldId الديناميك الصحيح
+      const payload = {
+        fieldId: fieldId, 
+        date: selectedDate,
+        startTime: formData.startTime,
+        duration: Number(formData.duration),
+        price: Number(formData.price),
+        playerName: formData.playerName,
+        phoneNumber: formData.phoneNumber
+      };
+
+      console.log("🚀 Sending Payload:", JSON.stringify(payload, null, 2));
+
+      const response = await addOfflineBooking(payload);
+      
+      console.log("✅ Server Response:", response);
+
+      if (response && response.isSuccess === true) {
+        alert("🎉 تم الحجز بنجاح!");
+        onSuccess(); // هيعمل Refresh
+        onClose();
+      } else {
+        alert(`:\n${response?.message} (Error: ${response?.errorCode})`);
+      }
+
+    } catch (error) {
+      console.error("❌ Error:", error);
+      alert("❌ حدث خطأ أثناء الاتصال بالسيرفر.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      {/* Modal Container */}
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh] md:max-h-[85vh] animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[2px] p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100 scale-100 transform transition-all">
         
-        {/* --- Header --- */}
-        <div className="flex justify-between items-center p-5 border-b bg-[#0F172A] rounded-t-2xl text-white shrink-0">
-          <h2 className="text-xl font-bold">Add Offline Booking</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X size={24} />
+        {/* Header */}
+        <div className="px-6 py-4 border-b bg-[#111827] flex justify-between items-center">
+          <div>
+            <h2 className="text-lg font-bold text-white">New Booking</h2>
+            <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+              <Calendar size={12} /> {selectedDate} • <Clock size={12} /> {formData.startTime}
+            </p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-1.5 rounded-full transition-all">
+            <X size={18} />
           </button>
         </div>
 
-        {/* --- Scrollable Body --- */}
-        <div className="p-6 space-y-5 overflow-y-auto">
+        {/* Body */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           
-          {/* Booking Summary Card */}
-          <div className="bg-gray-50 p-4 rounded-xl space-y-4 border border-gray-100">
-            
-            {/* Top Row: Field & Time */}
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-gray-500 text-xs uppercase tracking-wide font-semibold mb-1">Field</p>
-                <p className="font-semibold text-gray-800">Al Ahly Field 1</p>
-              </div>
-              <div className="text-right">
-                <p className="text-gray-500 text-xs uppercase tracking-wide font-semibold mb-1">Start Time</p>
-                <p className="font-semibold text-gray-800">
-                  {slotData?.time} {slotData?.ampm}
-                </p>
+          {/* Inputs */}
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Player Info</label>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="relative">
+                  <User className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    name="playerName"
+                    required
+                    autoFocus
+                    value={formData.playerName}
+                    onChange={handleChange}
+                    placeholder="Player Name"
+                    className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-[#111827] focus:border-transparent outline-none transition-all"
+                  />
+                </div>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    required
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    placeholder="Phone Number"
+                    className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-[#111827] focus:border-transparent outline-none transition-all"
+                  />
+                </div>
               </div>
             </div>
 
-            <hr className="border-gray-200" />
-
-            {/* Bottom Row: Duration & Price */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0">
-              
-              {/* Duration Selector */}
-              <div className="w-full sm:w-auto flex-1">
-                <label className="text-gray-500 text-xs uppercase tracking-wide font-semibold mb-1 block">Duration</label>
-                <div className="relative w-full sm:w-32">
-                  <select 
-                    value={duration}
-                    onChange={handleDurationChange}
-                    className="w-full appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-3 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-green-500 font-medium"
-                  >
-                    {/* Generate options based on available consecutive slots */}
-                    {[...Array(maxDuration)].map((_, i) => (
-                      <option key={i + 1} value={i + 1}>{i + 1} Hour{(i + 1) > 1 ? 's' : ''}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                    <Clock size={14} />
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 block">Booking Details</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <span className="text-xs text-gray-400">Duration (Hrs)</span>
+                  <input
+                    type="number"
+                    name="duration"
+                    step="1"
+                    min="1"
+                    max={maxDuration} 
+                    required
+                    value={formData.duration}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:bg-white focus:ring-2 focus:ring-[#111827] outline-none transition-all"
+                  />
+                  <p className="text-[10px] text-green-600">Max: {maxDuration} hrs free</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs text-gray-400">Price (EGP)</span>
+                  <div className="relative">
+                    <DollarSign className="absolute left-2.5 top-2.5 text-gray-400" size={14} />
+                    <input
+                      type="number"
+                      name="price"
+                      required
+                      value={formData.price}
+                      onChange={handleChange}
+                      className="w-full pl-8 pr-3 py-2 bg-green-50 border border-green-200 text-green-800 font-bold rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                    />
                   </div>
                 </div>
               </div>
-
-              {/* Total Price Display */}
-              <div className="w-full sm:w-auto text-left sm:text-right">
-                 <p className="text-gray-500 text-xs uppercase tracking-wide font-semibold mb-1">Total Price</p>
-                 <p className="text-2xl font-bold text-blue-600">{totalPrice} <span className="text-sm font-medium text-gray-500">EGP</span></p>
-              </div>
             </div>
           </div>
 
-          {/* Customer Form */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-700">Customer Details</h3>
-            
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Customer Name <span className="text-red-500">*</span></label>
-              <input 
-                type="text" 
-                placeholder="Enter customer's full name" 
-                className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none" 
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Mobile Number <span className="text-red-500">*</span></label>
-              <div className="flex">
-                <span className="bg-gray-100 border border-r-0 rounded-l-lg px-3 py-2 text-gray-500">+20</span>
-                <input 
-                  type="text" 
-                  placeholder="100 123 4567" 
-                  className="w-full border rounded-r-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none" 
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Section */}
-          <div className="space-y-3">
-             <h3 className="font-medium text-gray-700">Payment Status</h3>
-             <div className="flex gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="payment" className="w-4 h-4 text-green-600 focus:ring-green-500" defaultChecked />
-                  <span className="text-gray-700">Paid (Cash)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="payment" className="w-4 h-4 text-green-600 focus:ring-green-500" />
-                  <span className="text-gray-700">Unpaid</span>
-                </label>
-             </div>
-             
-             <div>
-                <label className="block text-sm text-gray-500 mb-1">Amount Received</label>
-                <div className="relative">
-                  <input 
-                    type="number" 
-                    value={totalPrice}
-                    onChange={(e) => setTotalPrice(e.target.value)}
-                    className="w-full border rounded-lg px-4 py-2 pr-12 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                  />
-                  <span className="absolute right-4 top-2 text-gray-400">EGP</span>
-                </div>
-             </div>
-          </div>
-        </div>
-
-        {/* --- Footer --- */}
-        <div className="p-5 border-t bg-gray-50 flex justify-end gap-3 shrink-0 rounded-b-2xl">
-          <button 
-            onClick={onClose} 
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors font-medium"
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#111827] hover:bg-black text-white font-semibold py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed text-sm"
           >
-            Cancel
+            {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+            {loading ? "Confirming..." : "Confirm Booking"}
           </button>
-          <button className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm shadow-green-200">
-            Confirm Booking
-          </button>
-        </div>
-
+        </form>
       </div>
     </div>
   );
