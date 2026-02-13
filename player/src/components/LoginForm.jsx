@@ -4,8 +4,10 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
 import axios from "axios";
 import { Link } from "react-router-dom";  
+import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -14,36 +16,66 @@ export default function LoginForm() {
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    console.log({
-   emailOrPhone: email,
-    password,
-  discriminator: 2
-    })
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      const response = await axios.post(
-        "http://turfytesting.runasp.net/Turfy/LoginUserEndpoint/Handle",
-        {
-          "emailOrPhone": email,
-          "password": password,
-          "discriminator": 2 // player
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
+  try {
+    const response = await axios.post(
+      "http://turfytesting.runasp.net/Turfy/LoginUserEndpoint/Handle",
+      {
+        "emailOrPhone": email,
+        "password": password,
+        "discriminator": 3,
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    console.log("FULL LOGIN RESPONSE:", response.data);
+
+    if (!response.data?.isSuccess) {
+      const code = response.data?.errorCode;
+
+      const errorMessages = {
+        1: "User not found",
+        2: "Account is locked",
+        3: "Account is not verified",
+        4: "Invalid input",
+        5: "Email or password is incorrect",
+      };
+
+      throw new Error(
+        errorMessages[code] || "Login failed, please try again"
       );
-
-      console.log("Login success:", response.data);
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Login failed, please try again");
-    } finally {
-      setLoading(false);
     }
-  };
+
+    const token = response.data.data?.token;
+
+    if (!token) {
+      throw new Error("Token not returned from server");
+    }
+
+    localStorage.setItem("token", token);
+
+    if (response.data.data?.refreshToken) {
+      localStorage.setItem(
+        "refreshToken",
+        response.data.data.refreshToken
+      );
+    }
+
+    navigate("/my-account");
+
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    setError(err.message || "Login failed, please try again");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 font-display">

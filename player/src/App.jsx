@@ -10,6 +10,9 @@ import ForgotPassword from "./pages/PasswordReset/ForgetPassword.jsx";
 import VerifyCodePage from "./pages/PasswordReset/VerifyCodePage.jsx";
 import SetNewPasswordPage from "./pages/PasswordReset/SetPasswordPage.jsx";
 import ResetSuccessPage from "./pages/PasswordReset/ResetSuccessPage.jsx";
+import MyAccount from "./pages/userAcoount/MyAccount.jsx";
+import BookingDetails from "./pages/BookingDetails/BookingDetails.jsx";
+import Competitions from "./pages/Events&Competitions/Competitions.jsx";
 
 function App() {
   return (
@@ -25,7 +28,9 @@ function App() {
         <Route path="/verify-code" element={<VerifyCodePage />} />
         <Route path="/set-new-password" element={<SetNewPasswordPage />} />
         <Route path="/reset-success" element={<ResetSuccessPage />} />
-        
+        <Route path="/my-account" element={<MyAccount />} />
+       <Route path="/booking-details/:id" element={<BookingDetails />} />  
+        <Route path="/competitions" element={<Competitions />} />
 
         {/* Catch-all: Redirect unknown URLs back to Home */}
         <Route path="*" element={<Navigate to="/" replace />} />

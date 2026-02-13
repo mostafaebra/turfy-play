@@ -6,7 +6,7 @@ import VenueCard from '../../components/VenueCard';
 import VenueSkeleton from '../../components/VenueSkeleton';
 import Pagination from '../../components/Pagination';
 import { X, SlidersHorizontal, List, Map } from 'lucide-react';
-import { fetchFilteredFields, getSportNameFromByte } from '../../services/fieldService';
+// import { fetchFilteredFields, getSportNameFromByte } from '../../services/fieldService';
 
 // Map API response fields to VenueCard expected format
 // Backend returns: FieldId, Name, Price, location, Rate, ImageURL, SportType (byte), Dis
