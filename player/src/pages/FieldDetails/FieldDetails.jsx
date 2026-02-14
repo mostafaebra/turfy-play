@@ -1,102 +1,70 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-// Services & Utils
-import { getFieldDetails } from "../../services/fieldService";
-import { getFacilitiesList } from "../../utils/mappings";
-
-// External Libraries
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+// --- FIX: Import the API service ---
+import { getFieldDetails } from "../../services/bookingApi";
 
 // Icons
 import {
-  MapPin,
-  Share2,
-  Heart,
-  Star,
-  ChevronLeft,
-  ArrowLeft,
-  Zap,
-  Car,
-  Armchair,
-  Waves,
-  ShieldCheck,
-  Clock,
-  Shirt,
-  CircleDashed,
-  ChevronRight,
-  Calendar as CalendarIcon,
+  MapPin, Star, ChevronLeft, ArrowLeft, Zap, Car,
+  Armchair, Waves, ShieldCheck, Clock, Shirt,
+  CircleDashed, ChevronRight
 } from "lucide-react";
 
-// --- CONSTANTS ---
-
-// Map facility names to icons and colors
-const AMENITY_ICONS = {
-  "Professional Lighting": {
-    icon: Zap,
-    color: "text-yellow-600",
-    bg: "bg-yellow-50",
-  },
-  "Changing Rooms": {
-    icon: Shirt,
-    color: "text-purple-600",
-    bg: "bg-purple-50",
-  },
-  Showers: { icon: Waves, color: "text-cyan-600", bg: "bg-cyan-50" },
-  "Secure Parking": { icon: Car, color: "text-blue-600", bg: "bg-blue-50" },
-  "Ball Rental": {
-    icon: CircleDashed,
-    color: "text-orange-600",
-    bg: "bg-orange-50",
-  },
-  "Spectator Seating": {
-    icon: Armchair,
-    color: "text-indigo-600",
-    bg: "bg-indigo-50",
-  },
+// --- UTILITY HELPER ---
+const getFacilitiesList = (facilities) => {
+  if (!facilities) return [];
+  if (Array.isArray(facilities) && typeof facilities[0] === 'string') return facilities;
+  if (Array.isArray(facilities) && typeof facilities[0] === 'object') {
+    return facilities.map(f => f.name || f.Name || "Unknown Facility");
+  }
+  return [];
 };
 
-// Cancellation policy definitions
+// --- CONSTANTS ---
+const AMENITY_ICONS = {
+  "Professional Lighting": { icon: Zap, color: "text-yellow-600", bg: "bg-yellow-50" },
+  "Changing Rooms": { icon: Shirt, color: "text-purple-600", bg: "bg-purple-50" },
+  Showers: { icon: Waves, color: "text-cyan-600", bg: "bg-cyan-50" },
+  "Secure Parking": { icon: Car, color: "text-blue-600", bg: "bg-blue-50" },
+  "Ball Rental": { icon: CircleDashed, color: "text-orange-600", bg: "bg-orange-50" },
+  "Spectator Seating": { icon: Armchair, color: "text-indigo-600", bg: "bg-indigo-50" },
+  "Default": { icon: ShieldCheck, color: "text-gray-600", bg: "bg-gray-100" }
+};
+
 const CANCELLATION_POLICIES = {
   1: {
     title: "Flexible Cancellation",
-    desc: "You can cancel your booking up to 24 hours before the match starts for a full refund. No fees applied.",
-    color: "text-green-700",
-    bg: "bg-green-50",
-    border: "border-green-200",
-    iconColor: "text-green-600",
+    desc: "You can cancel up to 24 hours before for a full refund.",
+    color: "text-green-700", bg: "bg-green-50", border: "border-green-200", iconColor: "text-green-600",
   },
   2: {
     title: "Moderate Policy",
-    desc: "Cancellations made 24 hours prior receive a 50% refund. No refund for cancellations made within 24 hours of the match.",
-    color: "text-orange-700",
-    bg: "bg-orange-50",
-    border: "border-orange-200",
-    iconColor: "text-orange-600",
+    desc: "50% refund for cancellations made 24 hours prior. No refund within 24h.",
+    color: "text-orange-700", bg: "bg-orange-50", border: "border-orange-200", iconColor: "text-orange-600",
   },
   3: {
-    title: "Strict Policy (Non-refundable)",
-    desc: "This booking is non-refundable. Once booked, the slot cannot be cancelled, rescheduled, or transferred under any circumstances.",
-    color: "text-red-700",
-    bg: "bg-red-50",
-    border: "border-red-200",
-    iconColor: "text-red-600",
+    title: "Strict Policy",
+    desc: "Non-refundable. Booking cannot be cancelled or rescheduled.",
+    color: "text-red-700", bg: "bg-red-50", border: "border-red-200", iconColor: "text-red-600",
   },
 };
 
 const FieldDetails = () => {
   // --- HOOKS ---
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams(); 
 
-  // Refs
-  const descriptionRef = useRef(null);
-  const amenitiesRef = useRef(null);
-  const reviewsRef = useRef(null);
-  const locationRef = useRef(null);
-  const policyRef = useRef(null);
-  const calendarRef = useRef(null);
+  // Refs for Scroll Spy
+  const refs = {
+    description: useRef(null),
+    amenities: useRef(null),
+    reviews: useRef(null),
+    location: useRef(null),
+    policy: useRef(null),
+    calendar: useRef(null)
+  };
 
   // --- STATE ---
   const [activeTab, setActiveTab] = useState("description");
@@ -107,285 +75,203 @@ const FieldDetails = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedDate, setSelectedDate] = useState(null);
 
-  // Touch State
+  // Touch State for Swiping
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
-  // --- EFFECTS ---
-
-  // 1. Fetch Field Details
+  // --- 1. FETCH DATA (Updated to use API Service) ---
   useEffect(() => {
     const fetchField = async () => {
+      if (!id) return;
+      
       try {
         setLoading(true);
-        const fieldId = id || 33;
-        const response = await getFieldDetails(fieldId);
+        setError(null);
 
-        if (response.isSuccess) {
-          setFieldData(response.data);
+        // Call the centralized API function
+        const result = await getFieldDetails(id);
+
+        if (result.isSuccess === true && result.data) {
+             setFieldData(result.data);
+        } else if (result.isSuccess === false) {
+             throw new Error(result.message || "Failed to load field details");
         } else {
-          setError("Failed to load field data");
+             // Fallback for different API structures
+             setFieldData(result.data || result);
         }
+
       } catch (err) {
-        console.error(err);
-        setError("Error connecting to server");
+        console.error("Fetch Details Error:", err);
+        setError(err.message || "Error loading field details");
       } finally {
         setLoading(false);
       }
     };
+    
     fetchField();
   }, [id]);
 
-  // 2. Handle Scroll Spy (Active Tab)
+  // --- 2. SCROLL SPY LOGIC ---
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 200;
+      const scrollPosition = window.scrollY + 250; 
 
-      // Check if bottom of page reached
-      if (
-        window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 50
-      ) {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 50) {
         setActiveTab("policy");
         return;
       }
 
-      // Check sections
-      if (policyRef.current && scrollPosition >= policyRef.current.offsetTop)
-        setActiveTab("policy");
-      else if (
-        locationRef.current &&
-        scrollPosition >= locationRef.current.offsetTop
-      )
-        setActiveTab("location");
-      else if (
-        reviewsRef.current &&
-        scrollPosition >= reviewsRef.current.offsetTop
-      )
-        setActiveTab("reviews");
-      else if (
-        amenitiesRef.current &&
-        scrollPosition >= amenitiesRef.current.offsetTop
-      )
-        setActiveTab("amenities");
-      else if (
-        descriptionRef.current &&
-        scrollPosition >= descriptionRef.current.offsetTop
-      )
-        setActiveTab("description");
+      if (refs.policy.current && scrollPosition >= refs.policy.current.offsetTop) setActiveTab("policy");
+      else if (refs.location.current && scrollPosition >= refs.location.current.offsetTop) setActiveTab("location");
+      else if (refs.reviews.current && scrollPosition >= refs.reviews.current.offsetTop) setActiveTab("reviews");
+      else if (refs.amenities.current && scrollPosition >= refs.amenities.current.offsetTop) setActiveTab("amenities");
+      else if (refs.description.current && scrollPosition >= refs.description.current.offsetTop) setActiveTab("description");
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // --- HANDLERS & LOGIC ---
+  // --- HANDLERS ---
+  const scrollToSection = (refName) => {
+    const ref = refs[refName];
+    if(ref && ref.current) {
+        window.scrollTo({ top: ref.current.offsetTop - 120, behavior: "smooth" });
+    }
+  };
 
-  // Swipe Handlers
   const minSwipeDistance = 50;
-
-  const onTouchStart = (e) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
+  const onTouchStart = (e) => { setTouchEnd(null); setTouchStart(e.targetTouches[0].clientX); };
+  const onTouchMove = (e) => { setTouchEnd(e.targetTouches[0].clientX); };
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
-
     if (isLeftSwipe) nextImage();
     if (isRightSwipe) prevImage();
   };
 
-  // Scroll to section
-  const scrollToSection = (ref) => {
-    window.scrollTo({
-      top: ref.current.offsetTop - 100,
-      behavior: "smooth",
-    });
-  };
+  const displayImages = (fieldData?.imagesURLs && fieldData.imagesURLs.length > 0) 
+    ? fieldData.imagesURLs 
+    : [
+        "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?q=80&w=2070",
+        "https://images.unsplash.com/photo-1543351611-58f69d7c1781?q=80&w=2070"
+      ];
 
-  // Image Slider Logic
-  const displayImages =
-    fieldData?.imagesURLs?.length > 0
-      ? fieldData.imagesURLs
-      : [
-          "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?q=80&w=2070",
-          "https://images.unsplash.com/photo-1543351611-58f69d7c1781?q=80&w=2070",
-          "https://images.unsplash.com/photo-1624880357913-a8539238245b?q=80&w=2070",
-        ];
+  const nextImage = () => setCurrentImageIndex((prev) => (prev === displayImages.length - 1 ? 0 : prev + 1));
+  const prevImage = () => setCurrentImageIndex((prev) => (prev === 0 ? displayImages.length - 1 : prev - 1));
 
-  const nextImage = () =>
-    setCurrentImageIndex((prev) =>
-      prev === displayImages.length - 1 ? 0 : prev + 1
-    );
-  const prevImage = () =>
-    setCurrentImageIndex((prev) =>
-      prev === 0 ? displayImages.length - 1 : prev - 1
-    );
-
-  // Render Stars
   const renderStars = (rating) => {
     return [...Array(5)].map((_, index) => (
-      <Star
-        key={index}
-        size={14}
-        className={`${
-          index < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-        }`}
-      />
+      <Star key={index} size={14} className={`${index < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
     ));
   };
 
-  // Calculate Max Booking Date
   const getMaxDate = () => {
     if (!fieldData) return null;
-    // Check for both 'availableDays' and 'availableDayes' (backend typo safety)
-    const rawDays = fieldData.availableDays || fieldData.availableDayes;
-    const daysToAdd = rawDays ? parseInt(rawDays, 10) : 0;
-    if (!daysToAdd) return null;
-
+    const daysToAdd = fieldData.availableDays ? parseInt(fieldData.availableDays, 10) : 30;
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + daysToAdd);
     return maxDate;
   };
 
-  // Navigate to Booking Page
   const handleBooking = () => {
-    if (!selectedDate) return;
-
-    const year = selectedDate.getFullYear();
-    const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
-    const day = String(selectedDate.getDate()).padStart(2, "0");
-
-    navigate("/booking", {
-      state: {
-        fieldId: fieldData?.id || id,
-        fieldName: fieldData?.name,
-        pricePerHour: fieldData?.pricePerHour,
-        fieldAddress: fieldData?.address,
-        image: fieldData?.imagesURLs?.[0],
-        selectedDate: `${year}-${month}-${day}`,
-      },
+    const currentId = id || fieldData?.id;
+    if (!currentId) return;
+    
+    // Pass selected date to BookingPage via state
+    // Note: BookingPage needs to be updated to read this state if it doesn't already
+    navigate(`/booking/${currentId}`, { 
+        state: { 
+            preSelectedDate: selectedDate 
+        } 
     });
   };
 
-  // Mobile Action: Scroll to Calendar OR Book
   const handleMobileAction = () => {
     if (selectedDate) {
       handleBooking();
     } else {
-      if (calendarRef.current) {
-        const yOffset = -150;
-        const y =
-          calendarRef.current.getBoundingClientRect().top +
-          window.pageYOffset +
-          yOffset;
-        window.scrollTo({ top: y, behavior: "smooth" });
+      if (refs.calendar.current) {
+        refs.calendar.current.scrollIntoView({ behavior: 'smooth' });
       }
     }
   };
 
-  // --- RENDER LOADING / ERROR ---
-  if (loading)
-    return (
-      <div className="h-screen flex justify-center items-center text-green-600 font-bold text-xl">
-        Loading Field...
-      </div>
-    );
-  if (error || !fieldData)
-    return (
-      <div className="h-screen flex justify-center items-center text-red-500 text-xl">
-        {error || "Field Not Found"}
-      </div>
-    );
+  // --- LOADING / ERROR STATES ---
+  if (loading) return (
+    <div className="h-screen flex flex-col justify-center items-center gap-4 bg-gray-50">
+      <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-gray-600 font-medium">Loading Field Details...</p>
+    </div>
+  );
+  
+  if (error || !fieldData) return (
+    <div className="h-screen flex flex-col justify-center items-center gap-4 bg-gray-50 px-4 text-center">
+      <div className="bg-red-50 p-4 rounded-full text-red-500"><ShieldCheck size={48} /></div>
+      <h3 className="text-xl font-bold text-gray-800">Something went wrong</h3>
+      <p className="text-gray-500 max-w-md">{error || "We couldn't find the field you're looking for."}</p>
+      <button onClick={() => navigate('/')} className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-black transition">
+        Go Home
+      </button>
+    </div>
+  );
 
-  // --- MAIN RENDER ---
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
-      {/* === HERO IMAGE SECTION === */}
-      <div
-        className="relative h-[400px] w-full group"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
-        <img
-          src={displayImages[currentImageIndex]}
-          alt={fieldData?.name || "Stadium"}
-          className="w-full h-full object-cover transition-opacity duration-500"
+    <div className="min-h-screen bg-gray-50 pb-12 font-sans">
+      
+      {/* === HERO SECTION === */}
+      <div className="relative h-[400px] w-full group overflow-hidden bg-gray-900" 
+           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+        
+        {/* Main Image */}
+        <img 
+            src={displayImages[currentImageIndex]} 
+            alt={fieldData?.name || "Field"} 
+            className="w-full h-full object-cover transition-opacity duration-500 opacity-90" 
         />
-
+        
         {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 md:top-6 md:left-6 p-3 bg-black/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition z-20"
-        >
+        <button onClick={() => navigate('/')} className="absolute top-4 left-4 p-3 bg-black/30 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black transition z-20">
           <ArrowLeft size={20} />
         </button>
-
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-
-        {/* Navigation Arrows */}
-        <button
-          onClick={prevImage}
-          className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/30 text-white rounded-full backdrop-blur-md hover:bg-white/30 transition opacity-70 hover:opacity-100"
-        >
-          <ChevronLeft size={24} />
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+        
+        {/* Desktop Nav Arrows */}
+        <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/40 text-white rounded-full backdrop-blur-md hover:bg-white/20 transition hidden md:block">
+            <ChevronLeft size={24} />
+        </button>
+        <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/40 text-white rounded-full backdrop-blur-md hover:bg-white/20 transition hidden md:block">
+            <ChevronRight size={24} />
         </button>
 
-        <button
-          onClick={nextImage}
-          className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/30 text-white rounded-full backdrop-blur-md hover:bg-white/30 transition opacity-70 hover:opacity-100"
-        >
-          <ChevronRight size={24} />
-        </button>
-
-        {/* Info Overlay (Added pb-12 for mobile dots spacing) */}
-        <div
-          ref={descriptionRef}
-          className="absolute bottom-0 left-0 w-full p-4 pb-12 md:p-8 z-10"
-        >
+        {/* Hero Text */}
+        <div ref={refs.description} className="absolute bottom-0 left-0 w-full p-4 pb-12 md:p-8 z-10">
           <div className="container mx-auto">
-            <div className="flex flex-col gap-1 md:gap-2">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-yellow-400 mb-1">
                 <Star fill="currentColor" size={18} />
-                <span className="text-white font-bold">
-                  {fieldData?.totalRating || 0}
-                </span>
-                <span className="text-gray-300 text-sm">
-                  ({fieldData?.reviewsCount || 0} reviews)
-                </span>
+                <span className="text-white font-bold">{fieldData?.totalRating || "New"}</span>
+                <span className="text-gray-300 text-sm">({fieldData?.reviewsCount || 0} reviews)</span>
               </div>
-
-              <h1 className="text-2xl md:text-5xl font-bold text-white mb-1 md:mb-2 leading-tight">
-                {fieldData?.name || "Loading..."}
+              <h1 className="text-2xl md:text-5xl font-bold text-white leading-tight">
+                {fieldData?.name || "Unnamed Field"}
               </h1>
-
-              <div className="flex items-center gap-2 text-gray-200 text-sm md:text-lg">
-                <MapPin size={16} className="text-green-400 md:w-5 md:h-5" />{" "}
-                <span>{fieldData?.address || "No Address"}</span>
+              <div className="flex items-center gap-2 text-gray-300 text-sm md:text-lg">
+                <MapPin size={18} className="text-green-400" /> 
+                <span>{fieldData?.address || "Address not provided"}</span>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Slider Dots */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        
+        {/* Pagination Dots */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
           {displayImages.map((_, index) => (
-            <div
-              key={index}
-              className={`h-2 w-2 rounded-full transition-all ${
-                index === currentImageIndex ? "bg-white w-4" : "bg-white/50"
-              }`}
-            ></div>
+            <div key={index} className={`h-1.5 rounded-full transition-all ${index === currentImageIndex ? "bg-white w-6" : "bg-white/40 w-1.5"}`}></div>
           ))}
         </div>
       </div>
@@ -393,398 +279,197 @@ const FieldDetails = () => {
       {/* === CONTENT GRID === */}
       <div className="container mx-auto px-4 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* === LEFT COLUMN: Details === */}
+          
+          {/* LEFT COLUMN: Details */}
           <div className="lg:col-span-2 space-y-8">
-            {/* 1. Sticky Navigation Tabs */}
-            <div className="sticky top-0 md:top-[0px] z-30 bg-gray-50 pt-2 pb-1 mb-8 transition-all shadow-sm">
-              <div className="flex flex-wrap justify-center md:justify-start items-center gap-x-4 gap-y-2 md:gap-x-8 border-b border-gray-200 text-gray-500 font-medium px-2 md:px-0">
-                {[
-                  "description",
-                  "amenities",
-                  "reviews",
-                  "location",
-                  "policy",
-                ].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => {
-                      const refs = {
-                        description: descriptionRef,
-                        amenities: amenitiesRef,
-                        reviews: reviewsRef,
-                        location: locationRef,
-                        policy: policyRef,
-                      };
-                      scrollToSection(refs[tab]);
-                    }}
-                    className={`pb-2 capitalize whitespace-nowrap transition-colors text-sm md:text-base ${
-                      activeTab === tab
-                        ? "border-b-2 border-green-500 text-green-600"
-                        : "hover:text-green-600 border-b-2 border-transparent"
-                    }`}
+            
+            {/* Sticky Navigation Tabs */}
+            <div className="sticky top-0 z-30 bg-gray-50 pt-2 pb-1 mb-8">
+              <div className="flex items-center gap-6 border-b border-gray-200 text-gray-500 font-medium pb-px overflow-x-auto no-scrollbar">
+                {["description", "amenities", "reviews", "location", "policy"].map((tab) => (
+                  <button 
+                    key={tab} 
+                    onClick={() => scrollToSection(tab)} 
+                    className={`capitalize whitespace-nowrap pb-3 text-sm md:text-base transition-colors border-b-2 ${activeTab === tab ? "text-green-600 border-green-600 font-bold" : "border-transparent hover:text-green-600"}`}
                   >
-                    {tab === "reviews"
-                      ? `Reviews (${fieldData.reviewsCount})`
-                      : tab}
+                    {tab === "reviews" ? `Reviews (${fieldData.reviewsCount || 0})` : tab}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* 2. Description Section */}
-            <section className="animate-fade-in-up">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
-                About this venue
-              </h2>
-              <p className="text-gray-600 leading-relaxed text-sm md:text-base">
-                Welcome to{" "}
-                <span className="font-bold text-gray-900">
-                  {fieldData?.name}
-                </span>
-                , the premier destination for sports enthusiasts in{" "}
-                <span className="text-gray-800">
-                  {fieldData?.address
-                    ? fieldData.address.split(",")[0]
-                    : "the area"}
-                </span>
-                . This facility is proud to feature a top-tier{" "}
-                <span className="font-bold text-green-600">
-                  {fieldData?.surfaceType || "Standard"}
-                </span>{" "}
-                surface, ensuring excellent playability and safety for all
-                athletes.
-                <br className="mb-2 block" />
-                Whether you are organizing a competitive league or a friendly
-                match, our field is perfectly sized for{" "}
-                <span className="font-bold text-blue-600">
-                  {fieldData?.fieldSize} games
-                </span>
-                . With well-maintained grounds and a great atmosphere, we
-                provide the perfect environment for you to enjoy the game.
+            {/* Description */}
+            <section className="animate-fade-in">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">About this venue</h2>
+              <p className="text-gray-600 leading-relaxed">
+                Welcome to <span className="font-bold text-gray-900">{fieldData?.name}</span>. 
+                Experience a top-tier game on our <span className="font-bold text-green-600">{fieldData?.surfaceType || "Professional"}</span> surface. 
+                Ideally suited for <span className="font-bold text-blue-600">{fieldData?.fieldSize || "Standard"}</span> matches.
               </p>
             </section>
 
-            {/* 3. Amenities Section */}
-            <section
-              ref={amenitiesRef}
-              className="border-t border-gray-100 pt-8 scroll-mt-24"
-            >
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
-                Amenities
-              </h2>
-
+            {/* Amenities */}
+            <section ref={refs.amenities} className="border-t border-gray-200 pt-8 scroll-mt-28">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Amenities</h2>
               {getFacilitiesList(fieldData?.facilities).length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-y-4 gap-x-8">
-                  {getFacilitiesList(fieldData.facilities).map(
-                    (amenityName, index) => {
-                      const config = AMENITY_ICONS[amenityName] || {
-                        icon: ShieldCheck,
-                        color: "text-gray-600",
-                        bg: "bg-gray-100",
-                      };
-                      const TheIcon = config.icon;
-
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center gap-3 text-gray-700"
-                        >
-                          <div
-                            className={`p-2 rounded-full ${config.bg} ${config.color}`}
-                          >
-                            <TheIcon size={20} />
-                          </div>
-                          <span className="text-sm md:text-base font-medium">
-                            {amenityName}
-                          </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {getFacilitiesList(fieldData.facilities).map((amenityName, index) => {
+                    const config = AMENITY_ICONS[amenityName] || AMENITY_ICONS["Default"];
+                    const TheIcon = config.icon;
+                    return (
+                      <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-white border border-gray-100 shadow-sm">
+                        <div className={`p-2 rounded-full ${config.bg} ${config.color}`}>
+                            <TheIcon size={18} />
                         </div>
-                      );
-                    }
-                  )}
+                        <span className="text-sm font-medium text-gray-700">{amenityName}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
-                <p className="text-gray-500 italic">
-                  No amenities listed for this venue.
-                </p>
+                <p className="text-gray-500 italic">No specific amenities listed.</p>
               )}
             </section>
 
-            {/* 4. Reviews Section */}
-            <section
-              ref={reviewsRef}
-              className="border-t border-gray-100 pt-8 mb-10 scroll-mt-24"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-                  Reviews{" "}
-                  <span className="text-gray-400 text-lg font-normal">
-                    ({fieldData?.rating?.length || 0})
-                  </span>
-                </h2>
-              </div>
-
+            {/* Reviews */}
+            <section ref={refs.reviews} className="border-t border-gray-200 pt-8 scroll-mt-28">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Reviews</h2>
               {fieldData?.rating && fieldData.rating.length > 0 ? (
                 <div className="space-y-6">
-                  {/* Reviews List */}
-                  {(() => {
-                    const initialLimit = 5;
-                    const displayedReviews = showAllReviews
-                      ? fieldData.rating
-                      : fieldData.rating.slice(0, initialLimit);
-
-                    return displayedReviews.map((review, index) => (
-                      <div
-                        key={index}
-                        className="flex gap-4 items-start border-b border-gray-50 pb-6 last:border-0"
-                      >
-                        <img
-                          src={
-                            review.imageURL ||
-                            `https://ui-avatars.com/api/?name=${
-                              review.userName || "User"
-                            }&background=random`
-                          }
-                          alt={review.userName}
-                          className="w-12 h-12 rounded-full object-cover border border-gray-100"
-                        />
+                  {(showAllReviews ? fieldData.rating : fieldData.rating.slice(0, 3)).map((review, index) => (
+                    <div key={index} className="flex gap-4 border-b border-gray-100 pb-6 last:border-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                             {(review.userName || "A").charAt(0)}
+                        </div>
                         <div className="flex-1">
                           <div className="flex justify-between items-start mb-1">
-                            <div>
-                              <h4 className="font-bold text-gray-900">
-                                {review.userName || "Anonymous"}
-                              </h4>
-                              <p className="text-xs text-gray-400">
-                                {review.date || "Recent"}
-                              </p>
-                            </div>
-                            <div className="flex gap-0.5">
-                              {renderStars(review.stars || 0)}
-                            </div>
+                            <h4 className="font-bold text-gray-900">{review.userName || "Guest User"}</h4>
+                            <div className="flex">{renderStars(review.stars || 5)}</div>
                           </div>
-                          <p className="text-gray-600 text-sm md:text-base leading-relaxed">
-                            {review.comment}
-                          </p>
+                          <p className="text-xs text-gray-400 mb-2">{review.date || "Recently"}</p>
+                          <p className="text-gray-600 text-sm leading-relaxed">{review.comment}</p>
                         </div>
-                      </div>
-                    ));
-                  })()}
-
-                  {/* Show More Button */}
-                  {fieldData.rating.length > 5 && (
-                    <button
-                      onClick={() => setShowAllReviews(!showAllReviews)}
-                      className="w-full mt-4 py-3 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition flex justify-center items-center gap-2"
-                    >
-                      {showAllReviews ? (
-                        <>
-                          Show Less{" "}
-                          <ChevronLeft className="rotate-90" size={16} />
-                        </>
-                      ) : (
-                        <>
-                          Show all {fieldData.rating.length} reviews{" "}
-                          <ChevronRight className="rotate-90" size={16} />
-                        </>
-                      )}
+                    </div>
+                  ))}
+                  {fieldData.rating.length > 3 && (
+                    <button onClick={() => setShowAllReviews(!showAllReviews)} className="w-full py-2 border border-gray-300 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition">
+                      {showAllReviews ? "Show Less" : `View all ${fieldData.rating.length} reviews`}
                     </button>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                  <p className="text-gray-500">
-                    No reviews yet. Be the first to review!
-                  </p>
+                <div className="p-8 bg-white border border-dashed border-gray-300 rounded-xl text-center text-gray-500">
+                    No reviews yet. Be the first to play here!
                 </div>
               )}
             </section>
 
-            {/* 4. Location Section */}
-            <section
-              ref={locationRef}
-              className="border-t border-gray-100 pt-8 scroll-mt-24"
-            >
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
-                Location
-              </h2>
-
-              <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm relative group h-72 md:h-96 bg-gray-100 transition-all">
-                {(() => {
-                  const lat = fieldData?.Latitude || fieldData?.latitude;
-                  const lng = fieldData?.Longitude || fieldData?.longitude;
-
-                  if (lat && lng) {
-                    return (
-                      <>
-                        <iframe
-                          title="Field Location"
-                          width="100%"
-                          height="100%"
-                          frameBorder="0"
-                          scrolling="no"
-                          marginHeight="0"
-                          marginWidth="0"
-                          src={`https://maps.google.com/maps?q=${lat},${lng}&hl=en&z=16&output=embed`}
-                          className="w-full h-full filter grayscale-[20%] group-hover:grayscale-0 transition duration-500"
-                        ></iframe>
-
-                        <div className="absolute top-4 right-4 z-10">
-                          <button
-                            onClick={() =>
-                              window.open(
-                                `https://maps.google.com/maps?q=${lat},${lng}`,
-                                "_blank"
-                              )
-                            }
-                            className="bg-white text-gray-900 px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold shadow-lg hover:bg-green-600 hover:text-white transition flex items-center gap-2 text-xs md:text-sm"
-                          >
-                            <MapPin
-                              size={14}
-                              className="text-red-500 hover:text-white md:w-4 md:h-4"
-                            />
-                            Open in Maps
-                          </button>
-                        </div>
-                      </>
-                    );
-                  } else {
-                    return (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 flex-col gap-2">
-                        <MapPin size={40} />
-                        <p>Location coordinates not available</p>
-                      </div>
-                    );
-                  }
-                })()}
+            {/* Location */}
+            <section ref={refs.location} className="border-t border-gray-200 pt-8 scroll-mt-28">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Location</h2>
+              <div className="rounded-xl overflow-hidden border border-gray-200 h-64 md:h-80 bg-gray-100 relative shadow-sm">
+                  {(fieldData?.latitude && fieldData?.longitude) ? (
+                    <iframe 
+                        title="map"
+                        width="100%" 
+                        height="100%" 
+                        frameBorder="0" 
+                        loading="lazy"
+                        // --- FIX: Corrected Map URL Syntax ---
+                        src={`https://maps.google.com/maps?q=${fieldData.latitude},${fieldData.longitude}&z=15&output=embed`}
+                        className="w-full h-full grayscale-[20%] hover:grayscale-0 transition duration-500"
+                    ></iframe>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+                        <MapPin size={32} />
+                        <p>Map preview unavailable</p>
+                    </div>
+                  )}
               </div>
-
-              <div className="mt-4 flex items-start gap-3 text-gray-600">
-                <MapPin className="mt-1 shrink-0 text-gray-400" size={20} />
-                <p className="text-sm md:text-base leading-relaxed font-medium">
-                  {fieldData?.address || "Address details not available"}
-                </p>
+              <div className="mt-4 flex items-start gap-3 text-gray-600 bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                  <MapPin size={20} className="text-green-600 shrink-0 mt-0.5" />
+                  <span className="font-medium">{fieldData?.address || "Address details unavailable"}</span>
               </div>
             </section>
 
-            {/* 6. Policy Section */}
-            <section
-              ref={policyRef}
-              className="border-t border-gray-100 pt-8 pb-8 scroll-mt-24"
-            >
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
-                Venue Policies
-              </h2>
-
-              <div className="space-y-4">
-                {(() => {
+             {/* Policies */}
+             <section ref={refs.policy} className="border-t border-gray-200 pt-8 pb-8 scroll-mt-28">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Venue Policies</h2>
+              {(() => {
                   const policyId = fieldData?.cancellationPolicy ?? 2;
-                  const policy =
-                    CANCELLATION_POLICIES[policyId] || CANCELLATION_POLICIES[2];
-
+                  const policy = CANCELLATION_POLICIES[policyId] || CANCELLATION_POLICIES[2];
                   return (
-                    <div
-                      className={`${policy.bg} border ${policy.border} rounded-xl p-4 flex gap-4 items-start transition-colors`}
-                    >
-                      <div
-                        className={`p-2 bg-white rounded-full ${policy.iconColor} shadow-sm shrink-0`}
-                      >
-                        <Clock size={20} />
-                      </div>
+                    <div className={`${policy.bg} border ${policy.border} rounded-xl p-5 flex gap-4 items-start`}>
+                      <div className={`p-2 bg-white rounded-full ${policy.iconColor} shadow-sm shrink-0`}><Clock size={20} /></div>
                       <div>
-                        <h4 className={`font-bold ${policy.color} mb-1`}>
-                          {policy.title}
-                        </h4>
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          {policy.desc}
-                        </p>
+                          <h4 className={`font-bold ${policy.color} mb-1`}>{policy.title}</h4>
+                          <p className="text-sm text-gray-700 leading-relaxed">{policy.desc}</p>
                       </div>
                     </div>
                   );
                 })()}
-              </div>
             </section>
           </div>
 
-          {/* === RIGHT COLUMN: Booking Sidebar (Desktop) === */}
-          <div className="lg:col-span-1" ref={calendarRef}>
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-24">
-              <div className="mb-6 border-b border-gray-100 pb-4">
-                <h3 className="text-xl font-bold text-gray-900">Select Date</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Pick a day to check availability
-                </p>
+          {/* RIGHT COLUMN: Sticky Booking Card */}
+          <div className="lg:col-span-1">
+            <div ref={refs.calendar} className="bg-white p-6 rounded-2xl shadow-xl border border-gray-100 sticky top-24">
+              <div className="mb-5 border-b border-gray-100 pb-4">
+                <h3 className="text-lg font-bold text-gray-900">Book Your Spot</h3>
+                <p className="text-sm text-gray-500">Instant confirmation</p>
               </div>
-
-              {/* Datepicker */}
-              <div className="mb-6 flex justify-center">
-                <style>{`
-                  .react-datepicker { font-family: inherit; border: none; background-color: white; }
-                  .react-datepicker__header { background-color: white; border-bottom: none; }
-                  .react-datepicker__current-month { font-weight: 700; color: #111827; margin-bottom: 10px; }
-                  .react-datepicker__day-name { color: #9CA3AF; font-weight: 600; width: 2.5rem; }
-                  .react-datepicker__day { width: 2.5rem; line-height: 2.5rem; border-radius: 50%; transition: all 0.2s; }
+              
+              <div className="flex justify-center mb-6">
+                 <style>{`
+                  .react-datepicker { border: none; font-family: inherit; width: 100%; }
+                  .react-datepicker__month-container { float: none; width: 100%; }
+                  .react-datepicker__header { background: white; border: none; padding-top: 0; }
+                  .react-datepicker__day-name { color: #9ca3af; width: 2.2rem; line-height: 2.2rem; }
+                  .react-datepicker__day { width: 2.2rem; line-height: 2.2rem; border-radius: 50%; transition: 0.2s; margin: 0.15rem; }
                   .react-datepicker__day:hover { background-color: #f0fdf4; color: #16a34a; }
                   .react-datepicker__day--selected { background-color: #16a34a !important; color: white !important; font-weight: bold; }
                   .react-datepicker__day--keyboard-selected { background-color: #dcfce7; color: #166534; }
                   .react-datepicker__day--disabled { color: #e5e7eb; }
-                  .react-datepicker__navigation-icon::before { border-color: #374151; }
                 `}</style>
-
-                <DatePicker
-                  selected={selectedDate}
-                  onChange={(date) => setSelectedDate(date)}
-                  inline
-                  minDate={new Date()}
-                  maxDate={getMaxDate()}
-                  dateFormat="yyyy-MM-dd"
+                <DatePicker 
+                    selected={selectedDate} 
+                    onChange={(date) => setSelectedDate(date)} 
+                    inline 
+                    minDate={new Date()} 
+                    maxDate={getMaxDate()} 
                 />
               </div>
 
-              {/* Desktop Button */}
-              <button
-                onClick={handleBooking}
-                disabled={!selectedDate}
-                className={`
-                    hidden lg:flex  
-                    w-full py-4 rounded-xl font-bold text-lg transition items-center justify-center gap-2
-                    ${
-                      selectedDate
-                        ? "bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-200 cursor-pointer transform hover:-translate-y-1"
-                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    }
+              <button 
+                onClick={handleBooking} 
+                disabled={!selectedDate} 
+                className={`w-full py-4 rounded-xl font-bold text-lg transition flex items-center justify-center gap-2
+                    ${selectedDate 
+                        ? "bg-green-600 text-white hover:bg-green-700 shadow-lg shadow-green-200 transform active:scale-95" 
+                        : "bg-gray-100 text-gray-400 cursor-not-allowed"}
                 `}
               >
-                {selectedDate ? "Book Now" : "Select a Date"}
-                <ChevronRight size={20} />
+                {selectedDate ? "Book Now" : "Select a Date"} <ChevronRight size={20} />
               </button>
-
-              <p className="text-center text-xs text-gray-400 mt-4 hidden lg:block">
-                Availability is updated in real-time
-              </p>
+              
+              <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-400">
+                <ShieldCheck size={14} /> <span>Secure SSL Booking</span>
+              </div>
             </div>
           </div>
+
         </div>
       </div>
 
-      {/* === MOBILE FLOATING BAR === */}
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 z-40 lg:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-        <div className="flex items-center gap-4">
-          {/* Action Button */}
-          <button
-            onClick={handleMobileAction}
-            className={`flex-1 py-3 rounded-xl font-bold text-base transition flex items-center justify-center gap-2 shadow-lg
-                    ${
-                      selectedDate
-                        ? "bg-green-600 text-white hover:bg-green-700 shadow-green-200"
-                        : "bg-gray-900 text-white hover:bg-gray-800"
-                    } 
-                `}
-          >
-            {selectedDate ? "Book Now" : "Select a Date"}
-            <ChevronRight size={18} />
-          </button>
-        </div>
+      {/* MOBILE FLOATING ACTION BUTTON */}
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 z-40 lg:hidden shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <button onClick={handleMobileAction} className={`w-full py-3.5 rounded-xl font-bold text-base transition flex items-center justify-center gap-2 shadow-lg ${selectedDate ? "bg-green-600 text-white shadow-green-200" : "bg-gray-900 text-white"}`}>
+            {selectedDate ? "Book Now" : "Select Date"} <ChevronRight size={18} />
+        </button>
       </div>
+
     </div>
   );
 };
+
 export default FieldDetails;
