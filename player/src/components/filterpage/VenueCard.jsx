@@ -1,5 +1,6 @@
 import React from 'react';
 import { Star, MapPin, Navigation } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const VenueCard = ({ venue, viewMode }) => {
   const hasDistance = venue.distance && venue.distance !== 'null' && venue.distance !== null;
@@ -74,9 +75,9 @@ const VenueCard = ({ venue, viewMode }) => {
                 ${venue.price} 
                 <span className="text-gray-400 font-normal text-[9px] md:text-xs ml-1">/hr</span>
             </span>
-            <button className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg text-xs md:text-base font-bold transition-all shadow-emerald-200 shadow-md">
+            <Link to={`/booking/${venue.id}`} className="bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg text-xs md:text-base font-bold transition-all shadow-emerald-200 shadow-md">
                 Book
-            </button>
+            </Link>
         </div>
       </div>
     </div>

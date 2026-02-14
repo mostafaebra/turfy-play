@@ -2,19 +2,21 @@ import React, { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
-import axios from "axios";
 import { Link, useNavigate } from "react-router-dom"; 
+import { authApi } from "../../services/authApi";
 import { useAuth } from "../../context/AuthContext";
+import { Loader2 } from "lucide-react"; // Make sure you have this installed or remove the icon
 
 export default function LoginForm() {
+  const navigate = useNavigate();
+  const { login } = useAuth(); 
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
-  const { login } = useAuth(); 
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,23 +24,37 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://turfytesting.runasp.net/Turfy/LoginUserEndpoint/Handle",
-        {
-          "emailOrPhone": email,
-          "password": password,
-          "discriminator": 2
-        },
-        { headers: { "Content-Type": "application/json" } }
-      );
+      const response = await authApi.login(email, password);
 
-      console.log("Login success:", response.data);
-      login(response.data); 
-      navigate("/");
+      console.log("Login Full Response:", response);
+
+      // 1. Check Success based on your API structure
+      if (response.isSuccess) {
+        
+        // 2. Map the API data to your app's user object
+        const userData = {
+            id: response.data.userId,      // from "userId"
+            name: response.data.fullName,  // from "fullName"
+            email: email,                  // Email isn't in response, so use state
+            role: response.data.role       // from "role"
+        };
+
+        const token = response.data.token;
+
+        // 3. Log in globally
+        login(userData, token);
+
+        // 4. Redirect
+        navigate("/");
+      } else {
+        setError(response.message || "Login failed.");
+      }
 
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Invalid credentials. Please try again.");
+      console.error("Login Error:", err);
+      // Safely extract error message
+      const msg = err.response?.data?.message || "Login failed. Please check your credentials.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -47,61 +63,71 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 font-display">
       
+      {/* Email / Phone */}
       <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-slate-700">Email or Phone Number</span>
+        <span className="text-sm font-medium text-slate-700">
+          Email or Phone Number
+        </span>
         <input
           type="text"
           placeholder="Enter your email or phone number"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="h-12 rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
+          className="h-12 rounded-lg border border-slate-200 bg-slate-50 px-4 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
           required
         />
       </label>
 
-      {/* PASSWORD FIELD WITH ERROR UNDERNEATH */}
-      <div className="flex flex-col gap-1">
-        <label className="flex flex-col gap-1 relative">
-          <span className="text-sm font-medium text-slate-700">Password</span>
-          <div className="relative">
-            <input
-              type={showPass ? "text" : "password"}
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError(""); // Clear error on type
-              }}
-              className={`h-12 w-full rounded-lg border bg-slate-50 px-4 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 
-                ${error ? 'border-red-500 focus:border-red-500' : 'border-slate-200 focus:border-emerald-500'}`}
-              required
-            />
-            <button
-              type="button"
-              className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-600"
-              onClick={() => setShowPass(!showPass)}
-            >
-              {showPass ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-            </button>
-          </div>
-        </label>
-        
-        {/* Error Message is now HERE (Under the password input) */}
-        {error && (
-            <p className="text-xs text-red-500 mt-1 ml-1 font-medium">{error}</p>
-        )}
-      </div>
+      {/* Password */}
+      <label className="flex flex-col gap-1 relative">
+        <span className="text-sm font-medium text-slate-700">
+          Password
+        </span>
 
-      <Link to="/forgot-password" className="text-xs text-emerald-500 text-right hover:underline -mt-2 cursor-pointer">
-            Forgot password?
+        <input
+          type={showPass ? "text" : "password"}
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="h-12 rounded-lg border border-slate-200 bg-slate-50 px-4 pr-11 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          required
+        />
+
+        <button
+          type="button"
+          className="absolute right-4 top-9 text-slate-400 hover:text-slate-600"
+          onClick={() => setShowPass(!showPass)}
+        >
+          {showPass ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+        </button>
+      </label>
+
+      <Link 
+          to="/forgot-password" 
+          className="text-xs text-secondary text-right hover:underline -mt-2 cursor-pointer"
+      >
+           Forgot password?
       </Link>
+
+      {error && (
+        <div className="text-sm text-red-500 text-center bg-red-50 p-3 rounded-lg border border-red-100">
+          {error}
+        </div>
+      )}
 
       <button
         type="submit"
         disabled={loading}
-        className="h-12 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition disabled:opacity-60"
+        className="h-12 rounded-lg bg-[#10B981] text-white text-sm font-semibold
+                   hover:bg-emerald-600 transition disabled:opacity-70 flex items-center justify-center gap-2"
       >
-        {loading ? "Signing In..." : "Sign In"}
+        {loading ? (
+            <>Signing In...</> 
+        ) : (
+            "Sign In"
+        )}
       </button>
 
       <div className="flex items-center gap-3 my-3">

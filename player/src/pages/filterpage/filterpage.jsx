@@ -256,7 +256,7 @@ const Filterpage = () => {
                       currentData.length > 0 ? (
                           currentData.map((venue) => (
                              // --- CHANGED: LINK NOW POINTS DIRECTLY TO BOOKING PAGE ---
-                             <Link key={venue.id} to={`/booking/${venue.id}/${todayString}`} className="block h-full group">
+                             <Link key={venue.id} to={`/details/${venue.id}`} className="block h-full group">
                                 <VenueCard venue={venue} viewMode={viewMode} />
                              </Link>
                           ))

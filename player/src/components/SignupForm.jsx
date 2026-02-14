@@ -2,12 +2,15 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
- 
+import { useAuth } from "../context/AuthContext";
+
 const SIGNUP_URL = "http://turfytesting.runasp.net/Turfy/RegisterPlayerEndpoint/NewRegisterPlayer"; 
 
 export default function SignupForm() {
+  const { login } = useAuth(); 
+  const navigate = useNavigate();
+
   const [fullName, setFullName] = useState("");
-  
   const [mobileNumber, setMobileNumber] = useState(""); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,21 +20,20 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const navigate = useNavigate();
   
   const [passwordStrength, setPasswordStrength] = useState(0); 
+
   const calculateStrength = (pass) => {
-    
     if (pass.length < 6) return 0;
     if (pass.length < 10) return 1;
     return 2;
   };
+
   const handlePasswordChange = (e) => {
     const newPass = e.target.value;
     setPassword(newPass);
     setPasswordStrength(calculateStrength(newPass));
   };
-  // End of password strength logic helpers...
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,15 +52,13 @@ export default function SignupForm() {
 
     setLoading(true);
 
-    
-   const signupData = {
-  fullName,
-  password,
-  confirmPassword: confirmPassword,
-  phoneNumber: `20${mobileNumber}`,
-  email: email || null,
-};
-
+    const signupData = {
+      fullName,
+      password,
+      confirmPassword: confirmPassword,
+      phoneNumber: `20${mobileNumber}`,
+      email: email || null,
+    };
     
     try {
       const response = await axios.post(SIGNUP_URL, signupData, {
@@ -67,18 +67,36 @@ export default function SignupForm() {
         },
       });
 
-
-       if (response.data.isSuccess) {
-        navigate("/login");
+      // --- FIX: Map the correct fields from your JSON response ---
+      if (response.data.isSuccess) {
         console.log("Signup success:", response.data);
-        setSuccess("Account created successfully! Redirecting...");
-       }else {
-        setError(response.data.message || "فشلت العملية، تأكد من صحة البيانات.");
+        
+        const apiData = response.data.data; // Access the inner 'data' object
+        
+        const userData = {
+            id: apiData.playerId,          // Use 'playerId'
+            userId: apiData.userId,        // Keep userId just in case
+            name: apiData.fullName,        // Use 'fullName'
+            email: apiData.email,          // Use 'email' from response
+            role: apiData.playerType       // Use 'playerType' (e.g. "Normal")
+        };
+        
+        const token = apiData.token;       // Use 'token'
+
+        // Log them in
+        login(userData, token);
+
+        setSuccess("Account created! Redirecting...");
+        
+        // Redirect to Home/Filter page immediately
+        navigate("/");
+        
+       } else {
+        setError(response.data.message || "Operation failed, please check your data.");
       }
       
      } catch (err) {
       console.error("Signup failed:", err.response || err);
-      
       setError(
         err.response?.data?.message || "Registration failed, please try again."
       );
@@ -86,32 +104,6 @@ export default function SignupForm() {
       setLoading(false);
     }
   };
-
-  
-  const getStrengthBarClass = (index) => {
-    let base = "h-1 rounded-full mx-0.5 transition-all duration-300";
-    if (index === 0) {
-      if (passwordStrength >= 1) return base + " bg-red-500 w-full";
-      return base + " bg-gray-200 w-1/3";
-    }
-    if (index === 1) {
-      if (passwordStrength >= 2) return base + " bg-yellow-500 w-full";
-      return base + " bg-gray-200 w-1/3";
-    }
-    if (index === 2) {
-      if (passwordStrength >= 3) return base + " bg-primary w-full";
-      return base + " bg-gray-200 w-1/3";
-    }
-    return base + " bg-gray-200 w-1/3";
-  };
-  
-  const getStrengthText = () => {
-    if (passwordStrength === 1) return <span className="text-xs text-red-500">Weak</span>;
-    if (passwordStrength === 2) return <span className="text-xs text-yellow-500">Medium</span>;
-    if (passwordStrength === 3) return <span className="text-xs text-primary">Strong</span>;
-    return <span className="text-xs text-text-light">Weak</span>;
-  };
-  // --- End of helper functions ---
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 font-display">
@@ -140,14 +132,14 @@ export default function SignupForm() {
             type="tel"
             placeholder="100 123 4567"
             value={mobileNumber}
-            onChange={(e) => setMobileNumber(e.target.value.replace(/[^0-9]/g, ''))} // لضمان إدخال الأرقام فقط
+            onChange={(e) => setMobileNumber(e.target.value.replace(/[^0-9]/g, ''))}
             className="flex-1 px-4 rounded-r focus:outline-none"
             required
           />
         </div>
       </label>
 
-      {/* Email Address (Optional) */}
+      {/* Email Address */}
       <label className="flex flex-col gap-1">
         <span className="text-sm font-normal text-light">Email Address (Optional)</span>
         <input
@@ -170,16 +162,13 @@ export default function SignupForm() {
           className="h-12 px-4 pr-10 rounded border border-border-color placeholder:text-gray-400 focus:ring-2 focus:ring-primary/40 focus:outline-none"
           required
         />
-        {/*     */}
         <div className="flex justify-between items-center mt-1">
             <div className="flex w-2/3">
-                {/*   */}
                 <div className="h-1 rounded-full w-1/3" style={{ 
                     backgroundColor: passwordStrength === 0 ? '#FEE2E2' : passwordStrength === 1 ? '#EF4444' : passwordStrength === 2 ? '#FBBF24' : '#10B981', 
                     transition: 'width 0.3s, background-color 0.3s' 
                 }} />
             </div>
-            {/*   */}
             <span className={`text-xs ${passwordStrength === 0 ? 'text-red-500' : passwordStrength === 1 ? 'text-yellow-500' : 'text-primary'}`}>
                 {passwordStrength === 0 ? 'Weak' : passwordStrength === 1 ? 'Medium' : 'Strong'}
             </span>
@@ -199,7 +188,7 @@ export default function SignupForm() {
         />
       </label>
 
-      {/* Terms and Privacy Checkbox */}
+      {/* Terms */}
       <div className="flex items-start my-2">
         <input
           type="checkbox"
@@ -217,15 +206,11 @@ export default function SignupForm() {
         </label>
       </div>
       
-      {/* Error & Success Messages */}
-      {error && (
-        <p className="text-sm text-red-500 text-center font-medium mt-1">{error}</p>
-      )}
-      {success && (
-        <p className="text-sm text-primary text-center font-medium mt-1">{success}</p>
-      )}
+      {/* Messages */}
+      {error && <p className="text-sm text-red-500 text-center font-medium mt-1">{error}</p>}
+      {success && <p className="text-sm text-primary text-center font-medium mt-1">{success}</p>}
 
-      {/* Verify & Create Account Button */}
+      {/* Submit Button */}
       <button
         type="submit"
         disabled={loading || !agreed}

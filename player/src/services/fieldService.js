@@ -76,11 +76,17 @@ export const fetchFilteredFields = async (filters, cursor = null) => {
 };
 
 export const getFieldDetails = async (id) => {
-    try {
-        const response = await axios.get(DETAILS_URL, { params: { FieldId: id } });
-        return response.data; 
-    } catch (error) {
-        console.error("API Error Link:", DETAILS_URL);
-        throw error;
-    }
+  try {
+      const response = await axios.get(DETAILS_URL, {
+          params: { 
+              FieldId: id 
+          } 
+      });
+      return response.data; 
+  } catch (error) {
+      console.error("API Error Link:", DETAILS_URL);
+      console.error("API Error Params:", { FieldId: id });
+      console.error("API Error Details:", error);
+      throw error;
+  }
 }
