@@ -1,125 +1,152 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { X, User, Calendar, Receipt } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { X, Check, XCircle, Loader2, User, Phone, DollarSign, Calendar, Clock, ShieldCheck, Mail } from "lucide-react";
+import { getOnlineBookingDetails, approveBooking, rejectBooking } from "../../../services/api";
 
-const VerifyBookingModal = ({ isOpen, onClose, slotData }) => {
-  // State for 4-digit OTP
-  const [otp, setOtp] = useState(['', '', '', '']);
-  const inputRefs = useRef([]);
+const VerifyBookingModal = ({ isOpen, onClose, slotData, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [bookingDetails, setBookingDetails] = useState(null);
 
-  // Reset OTP when modal opens
+  // Fetch details on modal open
   useEffect(() => {
-    if (isOpen) setOtp(['', '', '', '']);
-  }, [isOpen]);
+    if (isOpen && slotData?.bookingId) {
+      fetchDetails(slotData.bookingId);
+    }
+  }, [isOpen, slotData]);
 
-  // Handle input change (Digits only + Auto-focus next)
-  const handleChange = (index, value) => {
-    if (isNaN(value)) return; // Allow numbers only
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    // Auto-focus next input if value exists
-    if (value && index < 3) {
-      inputRefs.current[index + 1].focus();
+  const fetchDetails = async (id) => {
+    setFetching(true);
+    try {
+      const response = await getOnlineBookingDetails(id);
+      const data = response.data || response;
+      setBookingDetails(data);
+    } catch (error) {
+      console.error("Failed to load details", error);
+    } finally {
+      setFetching(false);
     }
   };
 
-  // Handle Backspace (Focus previous)
-  const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1].focus();
+  // Approve Booking Handler
+  const handleApprove = async () => {
+    setLoading(true);
+    try {
+      const res = await approveBooking(slotData.bookingId);
+      if (res && (res.isSuccess || res.success === true)) {
+        alert("✅ Booking Verified Successfully!");
+        onSuccess(); 
+        onClose();
+      } else {
+        alert("⚠️ Failed: " + (res.message || "Unknown error"));
+      }
+    } catch (error) {
+      alert("❌ Server Error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reject Booking Handler
+  const handleReject = async () => {
+    if (!window.confirm("Are you sure you want to REJECT this booking?")) return;
+    
+    setLoading(true);
+    try {
+      const res = await rejectBooking(slotData.bookingId);
+      if (res && (res.isSuccess || res.success === true)) {
+        alert("🚫 Booking Rejected!");
+        onSuccess(); 
+        onClose();
+      } else {
+        alert("⚠️ Failed: " + (res.message || "Unknown error"));
+      }
+    } catch (error) {
+      alert("❌ Server Error");
+    } finally {
+      setLoading(false);
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      {/* Modal Container */}
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh] md:max-h-[85vh] animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
         
-        {/* --- Header --- */}
-        <div className="flex justify-between items-center p-5 border-b bg-[#0F172A] rounded-t-2xl text-white shrink-0">
-          <h2 className="text-xl font-bold">Verify Booking</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X size={24} />
-          </button>
+        {/* Header */}
+        <div className="px-6 py-4 border-b bg-[#111827] flex justify-between items-center">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <ShieldCheck size={18} className="text-yellow-400" /> Verify Request
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-1.5 rounded-full"><X size={18} /></button>
         </div>
 
-        {/* --- Scrollable Body --- */}
-        <div className="p-6 space-y-6 overflow-y-auto">
-          
-          {/* Booking Details Card */}
-          <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-3">
-            
-            {/* Player Name */}
-            <div className="flex items-start gap-3">
-              <div className="mt-1 text-gray-400"><User size={18} /></div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase font-semibold">Player Name</p>
-                <p className="font-bold text-gray-800">{slotData?.player || "Unknown Player"}</p>
-              </div>
+        {fetching ? (
+            <div className="p-10 flex flex-col items-center justify-center text-gray-500 gap-2">
+                <Loader2 className="animate-spin text-blue-600" size={32} />
+                <p>Fetching details...</p>
             </div>
-            
-            {/* Field & Time */}
-            <div className="flex items-start gap-3">
-              <div className="mt-1 text-gray-400"><Calendar size={18} /></div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase font-semibold">Field & Time</p>
-                <p className="font-medium text-gray-700">
-                   Al Ahly Field 1 • {slotData?.time} {slotData?.ampm}
-                </p>
-              </div>
+        ) : (
+            <div className="p-6 space-y-6">
+                
+                {/* 1. Slot Details */}
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between items-center border-b border-blue-200 pb-2 mb-2">
+                         <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Requested Slot</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center gap-2 text-gray-700">
+                            <Calendar size={16} className="text-blue-500" />
+                            <span className="text-sm font-bold">{bookingDetails?.date?.split('T')[0] || slotData.actualDate}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-700">
+                            <Clock size={16} className="text-blue-500" />
+                            <span className="text-sm font-bold">{bookingDetails?.startTime || slotData.time}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. Player Information */}
+                <div className="space-y-3">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Player Info</label>
+                    
+                    <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mt-1">
+                            <User size={20} />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-bold text-gray-800">{bookingDetails?.playerName || "Online User"}</p>
+                            <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                <Mail size={12} /> {bookingDetails?.email || "No Email"}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                        <Phone size={18} className="text-gray-400" />
+                        <span className="text-sm font-medium text-gray-700">{bookingDetails?.phoneNumber || "No Phone"}</span>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
+                        <DollarSign size={18} className="text-green-600" />
+                        <span className="text-sm font-bold text-green-700">Price: {bookingDetails?.price || slotData.price} EGP</span>
+                    </div>
+                </div>
+
+                {/* 3. Action Buttons */}
+                <div className="flex gap-3 pt-4 border-t">
+                    <button onClick={handleReject} disabled={loading} className="flex-1 bg-white text-red-600 border border-red-200 hover:bg-red-50 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
+                        {loading ? <Loader2 className="animate-spin" size={18} /> : <XCircle size={20} />}
+                        Reject
+                    </button>
+                    
+                    <button onClick={handleApprove} disabled={loading} className="flex-[2] bg-green-600 text-white hover:bg-green-700 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-green-200 transition-all">
+                        {loading ? <Loader2 className="animate-spin" size={18} /> : <Check size={20} />}
+                        Approve Booking
+                    </button>
+                </div>
             </div>
-
-            {/* Booking ID */}
-            <div className="flex items-start gap-3">
-              <div className="mt-1 text-gray-400"><Receipt size={18} /></div>
-              <div>
-                <p className="text-xs text-gray-500 uppercase font-semibold">Booking ID</p>
-                <p className="font-mono text-gray-600">#TURFY{Math.floor(Math.random() * 10000)}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* OTP Input Section */}
-          <div className="text-center space-y-4 py-2">
-            <div>
-              <h3 className="text-lg font-bold text-gray-800">Enter Player OTP</h3>
-              <p className="text-gray-500 text-sm">Ask the player for the code sent to their mobile.</p>
-            </div>
-
-            <div className="flex justify-center gap-2 sm:gap-3 dir-ltr">
-              {otp.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(el) => (inputRefs.current[index] = el)}
-                  type="text"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-12 h-12 sm:w-14 sm:h-14 text-center text-xl sm:text-2xl font-bold border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 outline-none transition-all"
-                />
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        {/* --- Footer --- */}
-        <div className="p-5 border-t bg-gray-50 flex justify-end gap-3 shrink-0 rounded-b-2xl">
-          <button 
-            onClick={onClose} 
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors"
-          >
-            Cancel
-          </button>
-          <button className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm shadow-green-200 font-medium transition-colors">
-            Confirm Verification
-          </button>
-        </div>
-
+        )}
       </div>
     </div>
   );

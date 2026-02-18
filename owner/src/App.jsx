@@ -10,20 +10,20 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* 👇 1. الصفحة الرئيسية (Default Route) بقت اللوجين */}
+        {/* Default Route (Login) */}
         <Route path="/" element={<Ownerlogin />} />
 
-        {/* 👇 2. صفحات المصادقة (Auth) */}
+        {/* Authentication Routes */}
         <Route path="/Ownerlogin" element={<Ownerlogin />} />
         <Route path="/Ownersignup" element={<OwnerSignUp />} />
 
-        {/* 👇 3. صفحة الجدول (Schedule) */}
+        {/* Schedule Page */}
         <Route path="/schedule" element={<SchedulePage />} />
 
-        {/* 👇 4. صفحة إضافة ملعب (خليت الرابط بتاعها نضيف) */}
+        {/* Add New Field Page */}
         <Route path="/add-field" element={<AddNewField />} />
 
-        {/* 👇 5. لو كتب أي رابط غلط، يرجعه للوجين */}
+        {/* Catch-all redirect to home/login */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

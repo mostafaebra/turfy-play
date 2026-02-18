@@ -1,122 +1,214 @@
-import React from 'react';
-import { X, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { X, Save, Trash2, Loader2, User, Phone, DollarSign, Calendar, Clock, Edit2 } from "lucide-react";
+import { getOfflineBookingDetails, updateOfflineBooking, deleteOfflineBooking } from "../../../services/api";
 
-const EditBookingModal = ({ isOpen, onClose, slotData }) => {
+const EditBookingModal = ({ isOpen, onClose, slotData, onSuccess }) => {
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  
+  // State to hold original data for backend identification (oldData)
+  const [originalData, setOriginalData] = useState(null);
+
+  const [formData, setFormData] = useState({
+    fieldId: 0,
+    playerName: "",
+    phoneNumber: "",
+    price: "",
+    duration: 1, 
+    date: "",
+    startTime: ""
+  });
+
+  // Fetch details on modal open
+  useEffect(() => {
+    if (isOpen && slotData?.id) {
+      fetchDetails(slotData.id);
+    }
+  }, [isOpen, slotData]);
+
+  const fetchDetails = async (id) => {
+    setFetching(true);
+    try {
+      const response = await getOfflineBookingDetails(id);
+      const data = response.data || response; 
+
+      if (data) {
+        // Prepare date format
+        const formattedDate = data.date ? data.date.split("T")[0] : "";
+        
+        // Save original data snapshot for the update payload
+        setOriginalData({
+            date: formattedDate,
+            startTime: data.startTime, 
+            duration: Number(data.duration)
+        });
+
+        // Set form data for editing
+        setFormData({
+          fieldId: data.fieldId, 
+          playerName: data.playerName,
+          phoneNumber: data.phoneNumber,
+          price: data.price,
+          duration: data.duration,
+          date: formattedDate,
+          startTime: data.startTime
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load details", error);
+      alert("Failed to load booking details");
+      onClose();
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Update function: Sends both old and new data
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      // Construct payload as required by backend
+      const payload = {
+        fieldId: formData.fieldId,
+        
+        // Original Data
+        oldDate: originalData.date,
+        oldStartTime: originalData.startTime,
+        oldDuration: Number(originalData.duration),
+
+        // New Data (Edited)
+        newDate: formData.date,
+        newStartTime: formData.startTime,
+        newDuration: Number(formData.duration),
+        newPrice: Number(formData.price),
+        
+        playerName: formData.playerName,
+        phoneNumber: formData.phoneNumber
+      };
+
+      console.log("Sending Update Payload:", payload);
+
+      const res = await updateOfflineBooking(payload);
+      if (res && (res.isSuccess || res.success === true)) {
+        alert("✅ Booking Updated Successfully!");
+        onSuccess(); 
+        onClose();
+      } else {
+        alert("⚠️ Update Failed: " + (res.message || "Unknown error"));
+      }
+    } catch (error) {
+      alert("❌ Server Error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete function: Cancels the booking
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+
+    setLoading(true);
+    try {
+      const payload = {
+        fieldId: formData.fieldId, 
+        date: originalData?.date || formData.date, // Use original date for safety
+        startTime: originalData?.startTime || formData.startTime,
+        duration: Number(originalData?.duration || formData.duration)
+      };
+
+      const res = await deleteOfflineBooking(payload);
+      if (res && (res.isSuccess || res.success === true)) {
+        alert("🗑️ Booking Cancelled Successfully!");
+        onSuccess(); 
+        onClose();
+      } else {
+        alert("⚠️ Delete Failed: " + (res.message || "Unknown error"));
+      }
+    } catch (error) {
+      alert("❌ Server Error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      
-      {/* Modal Container: Max height constrained with internal scrolling */}
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh] md:max-h-[85vh] animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
         
-        {/* --- Header --- */}
-        <div className="flex justify-between items-center p-5 border-b bg-[#0F172A] rounded-t-2xl text-white shrink-0">
-          <h2 className="text-lg font-bold">Edit / Cancel Offline Booking</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
-            <X size={24} />
-          </button>
+        <div className="px-6 py-4 border-b bg-[#111827] flex justify-between items-center">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Edit2 size={18} className="text-blue-400" /> Edit Booking
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 p-1.5 rounded-full"><X size={18} /></button>
         </div>
 
-        {/* --- Scrollable Body --- */}
-        <div className="p-6 space-y-6 overflow-y-auto">
-          
-          {/* Read-only Info Block */}
-          <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl grid grid-cols-2 gap-y-4 gap-x-2 text-sm">
-            <div>
-              <p className="text-gray-500 text-xs uppercase mb-1">Field Name</p>
-              <p className="font-semibold text-gray-800">Al Ahly Field 1</p>
+        {fetching ? (
+            <div className="p-10 flex flex-col items-center justify-center text-gray-500 gap-2">
+                <Loader2 className="animate-spin text-blue-600" size={32} />
+                <p>Loading details...</p>
             </div>
-            <div className="text-right">
-              <p className="text-gray-500 text-xs uppercase mb-1">Date & Time</p>
-              <p className="font-semibold text-gray-800">
-                {slotData?.time} {slotData?.ampm}
-              </p>
-            </div>
-            <div>
-               <p className="text-gray-500 text-xs uppercase mb-1">Price</p>
-               <p className="font-semibold text-blue-600">{slotData?.price} EGP</p>
-            </div>
-            <div className="text-right">
-               <p className="text-gray-500 text-xs uppercase mb-1">Booking ID</p>
-               <p className="font-mono text-gray-600">#OFFLINE789</p>
-            </div>
-          </div>
-
-          {/* Customer Details Form */}
-          <div className="space-y-4">
-            <h3 className="font-medium text-gray-700 border-b pb-2">Customer Details</h3>
+        ) : (
+            <form onSubmit={handleUpdate} className="p-6 space-y-5">
             
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Customer Name</label>
-              <input 
-                type="text" 
-                defaultValue={slotData?.player || "Captain Mohamed"} 
-                className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
+            {/* Editable Date & Time */}
+            <div className="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="space-y-1">
+                    <label className="text-xs text-gray-500 font-semibold flex items-center gap-1"><Calendar size={12}/> New Date</label>
+                    <input type="date" name="date" required value={formData.date} onChange={handleChange} className="w-full bg-white px-2 py-1 rounded border border-gray-300 text-sm font-bold text-gray-800 outline-none focus:ring-1 focus:ring-blue-500" />
+                </div>
+                <div className="space-y-1">
+                    <label className="text-xs text-gray-500 font-semibold flex items-center gap-1"><Clock size={12}/> New Start Time</label>
+                    <input type="time" name="startTime" required value={formData.startTime} onChange={handleChange} className="w-full bg-white px-2 py-1 rounded border border-gray-300 text-sm font-bold text-gray-800 outline-none focus:ring-1 focus:ring-blue-500" />
+                </div>
             </div>
 
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Mobile Number</label>
-              <div className="flex">
-                <span className="bg-gray-100 border border-r-0 rounded-l-lg px-3 py-2 text-gray-500">+20</span>
-                <input 
-                  type="text" 
-                  defaultValue="100 123 4567" 
-                  className="w-full border rounded-r-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
+            {/* Player Info */}
+            <div className="space-y-3">
+                <div className="relative">
+                <User className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                <input type="text" name="playerName" required value={formData.playerName} onChange={handleChange} placeholder="Player Name" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div className="relative">
+                <Phone className="absolute left-3 top-2.5 text-gray-400" size={16} />
+                <input type="tel" name="phoneNumber" required value={formData.phoneNumber} onChange={handleChange} placeholder="Phone Number" className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
             </div>
-          </div>
 
-          {/* Payment Status Toggle */}
-          <div className="space-y-3">
-             <h3 className="font-medium text-gray-700">Payment Status</h3>
-             <div className="flex gap-4 p-1">
-                {/* Paid Option */}
-                <label className="flex-1 relative cursor-pointer group">
-                  <input type="radio" name="payment_edit" className="peer sr-only" defaultChecked={slotData?.paymentStatus !== 'Unpaid'} />
-                  <div className="p-3 text-center border rounded-lg peer-checked:border-green-500 peer-checked:bg-green-50 peer-checked:text-green-700 transition-all font-medium text-gray-600">
-                    Paid (Cash)
-                  </div>
-                </label>
+            {/* Price & Duration */}
+            <div className="grid grid-cols-2 gap-4">
+                <div className="relative">
+                    <label className="text-xs text-gray-500 mb-1 block">New Price (EGP)</label>
+                    <DollarSign className="absolute left-3 top-7 text-gray-400" size={14} />
+                    <input type="number" name="price" required value={formData.price} onChange={handleChange} className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg font-bold text-green-700 outline-none focus:border-green-500" />
+                </div>
+                <div>
+                    <label className="text-xs text-gray-500 mb-1 block">New Duration (Hrs)</label>
+                    <input type="number" name="duration" min="1" max="6" step="0.5" required value={formData.duration} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:border-blue-500" />
+                </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-2">
+                <button type="button" onClick={handleDelete} disabled={loading} className="flex-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all">
+                    {loading ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
+                    Cancel
+                </button>
                 
-                {/* Unpaid Option */}
-                <label className="flex-1 relative cursor-pointer group">
-                  <input type="radio" name="payment_edit" className="peer sr-only" defaultChecked={slotData?.paymentStatus === 'Unpaid'} />
-                  <div className="p-3 text-center border rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-700 transition-all font-medium text-gray-600">
-                    Unpaid
-                  </div>
-                </label>
-             </div>
-          </div>
+                <button type="submit" disabled={loading} className="flex-[2] bg-[#111827] text-white hover:bg-black py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-lg transition-all">
+                    {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                    Update Booking
+                </button>
+            </div>
 
-        </div>
-
-        {/* --- Footer --- */}
-        {/* Responsive Flex: Stacks vertically on mobile, row on desktop */}
-        <div className="p-5 border-t bg-gray-50 flex flex-col-reverse sm:flex-row justify-between items-center gap-3 rounded-b-2xl shrink-0">
-          
-          {/* Cancel Button (Destructive) */}
-          <button className="w-full sm:w-auto flex justify-center items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100">
-            <Trash2 size={18} />
-            <span className="font-medium">Cancel Booking</span>
-          </button>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <button 
-                onClick={onClose}
-                className="w-full sm:w-auto px-5 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-                Close
-            </button>
-            <button className="w-full sm:w-auto px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-sm shadow-green-200 transition-colors">
-                Save Changes
-            </button>
-          </div>
-        </div>
-
+            </form>
+        )}
       </div>
     </div>
   );
