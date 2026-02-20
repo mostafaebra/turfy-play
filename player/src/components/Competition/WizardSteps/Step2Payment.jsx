@@ -1,19 +1,19 @@
 import React, { useState } from "react";
-import { CreditCard, Wallet, Banknote, CheckCircle, AlertCircle } from "lucide-react";
+import { CreditCard, Wallet, Banknote, CheckCircle, Loader2 } from "lucide-react";
 
-const Step2Payment = ({ formData, updateFormData, onNext, onBack }) => {
-  // ثوابت (ممكن تيجي من الـ API بعدين)
-  const ENTRY_FEE = 1000;
-  const SERVICE_FEE = 50;
-  const USER_WALLET_BALANCE = 250.00; // رصيد وهمي للمحاكاة
+const Step2Payment = ({ formData, updateFormData, onBack, onSubmit, loading, competitionPrice }) => {
+  // Constants (using passed price or default)
+  const ENTRY_FEE = competitionPrice || 1000;
+  const SERVICE_FEE = ENTRY_FEE * 0.05; // 5% service fee
+  const USER_WALLET_BALANCE = 250.00; // Mock wallet balance
 
-  // State محلي للموافقة على الشروط
+  // Local state for terms agreement
   const [agreed, setAgreed] = useState(false);
 
-  // --- 🧮 Logic الحسابات ---
+  // --- Calculation Logic ---
   const subtotal = ENTRY_FEE + SERVICE_FEE;
   
-  // لو معلم على المحفظة، نخصم الرصيد (بحد أقصى قيمة الفاتورة)
+  // Apply wallet discount if selected (max up to invoice value)
   const walletDiscount = formData.useWallet 
     ? Math.min(subtotal, USER_WALLET_BALANCE) 
     : 0;
@@ -76,7 +76,7 @@ const Step2Payment = ({ formData, updateFormData, onNext, onBack }) => {
         </label>
       </div>
 
-      {/* --- 3. Total Amount Due (النتيجة النهائية) --- */}
+      {/* --- 3. Total Amount Due --- */}
       <div className="bg-green-50 p-5 rounded-xl border border-green-200 mb-8 flex justify-between items-center">
         <div>
             <p className="text-sm text-green-800 font-medium">Total Amount Due</p>
@@ -129,18 +129,19 @@ const Step2Payment = ({ formData, updateFormData, onNext, onBack }) => {
         <div className="flex gap-4 pt-2">
             <button 
                 onClick={onBack} 
-                className="flex-1 px-6 py-3.5 border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all"
+                disabled={loading}
+                className="flex-1 px-6 py-3.5 border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50"
             >
                 Back
             </button>
             <button 
-                onClick={onNext} 
-                disabled={!agreed}
+                onClick={onSubmit} 
+                disabled={!agreed || loading}
                 className={`flex-1 px-6 py-3.5 text-white font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2
-                    ${agreed ? "bg-green-600 hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5" : "bg-gray-300 cursor-not-allowed"}
+                    ${agreed && !loading ? "bg-green-600 hover:bg-green-700 hover:shadow-lg hover:-translate-y-0.5" : "bg-gray-300 cursor-not-allowed"}
                 `}
             >
-                Pay Now & Register Team
+                {loading ? <Loader2 className="animate-spin" size={20} /> : "Pay Now & Register Team"}
             </button>
         </div>
       </div>

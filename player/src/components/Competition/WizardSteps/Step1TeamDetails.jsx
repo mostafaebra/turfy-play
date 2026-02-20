@@ -6,7 +6,7 @@ const Step1TeamDetails = ({ formData, updateFormData, onNext }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [error, setError] = useState("");
 
-  // دالة التعامل مع اختيار الصورة
+  // Handle File Selection
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -14,25 +14,29 @@ const Step1TeamDetails = ({ formData, updateFormData, onNext }) => {
         alert("File size is too large! Max 5MB.");
         return;
       }
-      // حفظ الملف في الـ State
+      // Save file to state
       updateFormData("teamLogo", file);
-      // عمل Preview للصورة
+      // Create preview URL
       const objectUrl = URL.createObjectURL(file);
       setPreviewUrl(objectUrl);
     }
   };
 
-  // دالة زرار Next
+  // Handle Next Button Click
   const handleSubmit = () => {
     if (!formData.teamName.trim()) {
       setError("Please enter a team name.");
       return;
     }
+    if (!formData.captainName.trim()) {
+      alert("Please enter the Captain Name.");
+      return;
+    }
     setError("");
-    onNext(); // نروح للخطوة اللي بعدها
+    onNext(); // Proceed to next step
   };
 
-  // دالة حذف الصورة المختارة
+  // Remove Selected Image
   const removeImage = (e) => {
     e.stopPropagation();
     updateFormData("teamLogo", null);
@@ -71,22 +75,25 @@ const Step1TeamDetails = ({ formData, updateFormData, onNext }) => {
           {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
         </div>
 
-        {/* --- 2. Team Captain (Read Only) --- */}
+        {/* --- 2. Team Captain (Now Editable) --- */}
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-gray-700">Team Captain</label>
+          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            Team Captain <span className="text-red-500">*</span>
+          </label>
           <div className="relative">
-            <User className="absolute left-3 top-3 text-gray-500" size={18} />
+            <User className="absolute left-3 top-3 text-gray-400" size={18} />
             <input
               type="text"
+              placeholder="Captain's Name"
               value={formData.captainName}
-              disabled
-              className="w-full pl-10 pr-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed font-medium"
+              onChange={(e) => updateFormData("captainName", e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all font-medium text-gray-700"
             />
           </div>
-          <p className="text-[10px] text-gray-400">Logged in user is automatically assigned as captain.</p>
+          <p className="text-[10px] text-gray-400">You can change the name if someone else is the captain.</p>
         </div>
 
-        {/* --- 3. Logo Upload (Custom Design) --- */}
+        {/* --- 3. Logo Upload --- */}
         <div className="space-y-2">
           <label className="text-sm font-semibold text-gray-700">Team Logo (Optional)</label>
           
@@ -129,7 +136,7 @@ const Step1TeamDetails = ({ formData, updateFormData, onNext }) => {
           </div>
         </div>
 
-        {/* --- 4. Nickname (Optional) --- */}
+        {/* --- 4. Nickname --- */}
         <div className="space-y-2">
           <label className="text-sm font-semibold text-gray-700">Team Nickname / Motto (Optional)</label>
           <div className="relative">

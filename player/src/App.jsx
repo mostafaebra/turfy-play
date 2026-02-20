@@ -10,8 +10,8 @@ import FieldDetails from './pages/FieldDetails/FieldDetails.jsx';
 import BookingPage from './pages/Booking/BookingPage';
 import ReportIssue from './pages/ReportIssue/ReportIssue.jsx';
 
-// 👇👇👇 1. استيراد صفحة المسابقات الجديدة 👇👇👇
 import RegisterCompetitionPage from "./pages/Competition/RegisterCompetitionPage.jsx";
+import ConfirmationPage from "./pages/Competition/ConfirmationPage";
 
 // Import Auth & Password Pages
 import ForgotPassword from "./pages/PasswordReset/ForgetPassword.jsx";
@@ -38,8 +38,8 @@ function App() {
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/report-issue" element={<ReportIssue />} />
 
-      {/* 👇👇👇 2. الراوت الجديد للمسابقات 👇👇👇 */}
       <Route path="/competition/register" element={<RegisterCompetitionPage />} />
+      <Route path="/competition/confirmation" element={<ConfirmationPage />} />
 
       {/* Fallback Route */}
       <Route path="*" element={<Navigate to="/" replace />} />
