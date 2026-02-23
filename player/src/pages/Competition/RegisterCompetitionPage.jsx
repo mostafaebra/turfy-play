@@ -17,7 +17,7 @@ const RegisterCompetitionPage = () => {
 
   // Get competition data from the previous page (or use default values for testing)
   const competition = location.state?.competition || {
-    id: 147,
+    id: 2,
     name: "Summer Kickoff Cup",
     sport: "5-a-side Football",
     price: 630, // Price from postman

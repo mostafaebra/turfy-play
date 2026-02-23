@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// Updated server URL
-const API_URL = "http://turfyplaylite.runasp.net/Turfy";
+// Updated server URL (Ensure /Turfy is included)
+const API_URL = "http://turfy.runasp.net/Turfy";
 
 const API = axios.create({
   baseURL: API_URL,
@@ -29,7 +29,6 @@ export const registerTeamInCompetition = async (data) => {
   formData.append("CompetitionId", Number(data.competitionId)); 
   formData.append("TeamName", data.teamName);
   
-  //  Used Nackname with 'a' according to project Swagger
   formData.append("TeamNackname", data.teamNickname || ""); 
   
   formData.append("TeamCaptain", data.teamCaptain);
@@ -48,7 +47,14 @@ export const registerTeamInCompetition = async (data) => {
   const pMethod = data.paymentMethod === "credit_card" ? "1" : "2";
   formData.append("PaymentMethod", pMethod); 
 
-  // Updated Endpoint from Console image
+  // 5. Log the FormData to debug and send to backend
+  console.group("🚀 Data sent to Backend (FormData)");
+  for (let [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
+  }
+  console.groupEnd();
+
+  // Endpoint call
   const response = await API.post("/BookCompetitionEndpoint/Handle", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -59,10 +65,40 @@ export const registerTeamInCompetition = async (data) => {
 };
 
 export const getConfirmationDetails = async (id) => {
-  //  /Handle?id=123
+  // Fetch confirmation details using ID
   const response = await API.get(`/GetConfirmCompetitionEndpoint/Handle`, {
     params: { id: id } 
   });
+  return response.data;
+};
+
+
+/*
+  Submit an Issue Report function
+ */
+export const submitReportIssue = async (data) => {
+  const formData = new FormData();
+  
+  // 1. Basic data based on Swagger UI
+  formData.append("BookingId", data.bookingId);
+  formData.append("Category", data.category); 
+  formData.append("Severity", data.severity); 
+  formData.append("Description", data.description);
+
+  // 2. Upload files (IssueImages Array)
+  if (data.images && data.images.length > 0) {
+    data.images.forEach((img) => {
+      formData.append("IssueImages", img.file); 
+    });
+  }
+
+  // 3. Endpoint call
+  const response = await API.post("/CreateIssueEndpoint/Handle", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  
   return response.data;
 };
 
