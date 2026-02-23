@@ -1,201 +1,140 @@
-// CORRECTED IMPORT:
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Navbar from '../../components/Navbar';
-import FilterSidebar from '../../components/FilterSidebar';
-import VenueCard from '../../components/VenueCard';
-import VenueSkeleton from '../../components/VenueSkeleton';
-import Pagination from '../../components/Pagination';
-import { X, SlidersHorizontal, List, Map } from 'lucide-react';
-import { fetchFilteredFields, getSportNameFromByte } from '../../services/fieldService';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import Navbar from "../../components/Navbar";
+import FilterSidebar from "../../components/filterpage/FilterSidebar";
+import VenueCard from "../../components/filterpage/VenueCard";
+import VenueSkeleton from "../../components/filterpage/VenueSkeleton";
+import Pagination from "../../components/filterpage/Pagination";
+import { X, SlidersHorizontal, List, Map, AlertCircle, RefreshCw } from "lucide-react";
+import { fetchFilteredFields, getSportNameFromByte } from "../../services/fieldService";
+import { Link } from "react-router-dom";
 
+// --- HELPER: Get Today's Date formatted as YYYY-MM-DD ---
+const getTodayString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
-// Map API response fields to VenueCard expected format
-// Backend returns: FieldId, Name, Price, location, Rate, ImageURL, SportType (byte), Dis
 const mapApiVenueToCard = (apiVenue) => {
-  // Handle location - if backend returns null, display as "none"
   const rawLocation = apiVenue.location || apiVenue.Location || apiVenue.address || apiVenue.city;
-  let trimmedLocation = 'none';
+  let trimmedLocation = 'Unknown Location';
   
-  if (rawLocation && rawLocation !== null && rawLocation !== 'null' && rawLocation.trim() !== '') {
-    // Trim location: remove everything before the first comma
+  if (rawLocation && typeof rawLocation === 'string') {
     trimmedLocation = rawLocation.includes(',') 
       ? rawLocation.substring(rawLocation.indexOf(',') + 1).trim()
       : rawLocation.trim();
   }
   
-  // Format rating to 1 decimal place
-  const rawRating = apiVenue.Rate || apiVenue.rate || apiVenue.rating || apiVenue.averageRating || 0;
-  const formattedRating = typeof rawRating === 'number' 
-    ? rawRating.toFixed(1) 
-    : parseFloat(rawRating).toFixed(1) || '0.0';
+  const rawRating = apiVenue.Rate || apiVenue.rate || apiVenue.rating || 0;
+  const formattedRating = Number(rawRating).toFixed(1);
   
+  const rawDistance = apiVenue.Dis ?? apiVenue.dis ?? apiVenue.distance ?? apiVenue.Distance;
+  let formattedDistance = null;
+
+  if (rawDistance !== null && rawDistance !== undefined) {
+    const num = parseFloat(rawDistance);
+    if (!isNaN(num)) formattedDistance = num.toFixed(1);
+  }
+
+  const typeByte = apiVenue.SportType ?? apiVenue.sportType; 
+  const displaySport = getSportNameFromByte(typeByte) || 'Sports';
+
   return {
     id: apiVenue.FieldId || apiVenue.fieldId || apiVenue.id,
     name: apiVenue.Name || apiVenue.name || 'Unnamed Venue',
-    sportType: getSportNameFromByte(apiVenue.SportType) || null,
+    sportType: displaySport,
     rating: formattedRating,
-    location: trimmedLocation, // Will be null if backend returns null
-    distance: apiVenue.Dis !== null && apiVenue.Dis !== undefined 
-      ? `${apiVenue.Dis.toFixed(1)}` 
-      : (apiVenue.distance ? `${apiVenue.distance.toFixed(1)}` : null),
-    price: apiVenue.Price || apiVenue.price || apiVenue.pricePerHour || apiVenue.hourlyRate || 0,
-    image: apiVenue.ImageURL || apiVenue.imageURL || apiVenue.image || apiVenue.imageUrl || apiVenue.photo || "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=1000"
+    location: trimmedLocation,
+    distance: formattedDistance,
+    price: apiVenue.Price || apiVenue.price || 0,
+    image: apiVenue.ImageURL || apiVenue.image || "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?auto=format&fit=crop&q=80&w=1000"
   };
 };
 
 const Filterpage = () => {
-  // --- STATE ---
   const [filters, setFilters] = useState({
-    sort: 'Best Match',
-    location: '',
-    type: '',
-    priceMin: '', 
-    priceMax: '',
-    rating: 'Any',
-    lat: null,
-    lng: null
+    sort: 'Best Match', location: '', type: '', priceMin: '', priceMax: '', rating: 'Any', lat: null, lng: null,
+    search: '' 
   });
-  const [globalSearch, setGlobalSearch] = useState('');
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [viewMode, setViewMode] = useState('List');
-  const [nextCursor, setNextCursor] = useState({ value: null, id: null });
+  
+  const [viewMode, setViewMode] = useState('Map'); 
+
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState(null);
   const cursorRef = useRef({ value: null, id: null });
 
-  // Fetch data from API
+  const handleSearchSubmit = (term) => {
+    setFilters(prev => ({ ...prev, search: term }));
+    setPage(1); 
+  };
+
   const handleFetch = useCallback(async (isLoadMore = false) => {
     setLoading(true);
     setError(null);
     try {
-      // Use ref to get current cursor (avoids dependency issues)
       const cursor = isLoadMore && cursorRef.current.value ? cursorRef.current : null;
-      
       const data = await fetchFilteredFields(filters, cursor);
       
-      // Validate response structure
-      if (!data) {
-        throw new Error('Invalid API response: No data received');
-      }
+      if (!data) throw new Error('No data received');
       
-      // Map API response items to VenueCard format
       const items = Array.isArray(data.items) ? data.items : (data.data?.items || []);
       const mappedItems = items.map(mapApiVenueToCard);
       
-      // If loading more, append. Otherwise, replace.
       setVenues(prevVenues => isLoadMore ? [...prevVenues, ...mappedItems] : mappedItems);
       
-      // Save the cursor for the next request (both state and ref)
       const newCursor = { 
         value: data.nextCursorValue || data.nextCursor || null, 
         id: data.nextCursorTieBreakerId || data.nextId || null
       };
-      setNextCursor(newCursor);
       cursorRef.current = newCursor;
       setHasMore(data.hasMore !== undefined ? data.hasMore : (mappedItems.length >= 8));
       
-      // Reset to page 1 when filters change (not on load more)
       if (!isLoadMore) {
         setPage(1);
-        // Reset cursor when filters change
         cursorRef.current = { value: null, id: null };
       }
     } catch (err) {
-      console.error('Error fetching venues:', err);
-      
-      // Provide more specific error messages
-      let errorMessage = 'Failed to load venues. Please try again.';
-      if (err.response) {
-        // Server responded with error status
-        errorMessage = err.response.data?.message || `Server error: ${err.response.status}`;
-      } else if (err.request) {
-        // Request was made but no response received
-        errorMessage = 'Network error. Please check your connection.';
-      } else {
-        // Something else happened
-        errorMessage = err.message || 'An unexpected error occurred.';
-      }
-      
-      setError(errorMessage);
-      if (!isLoadMore) {
-        setVenues([]);
-      }
+      console.error('API Error:', err);
+      setError('We encountered an issue while loading the venues.');
+      if (!isLoadMore) setVenues([]); 
     } finally {
       setLoading(false);
     }
   }, [filters]);
 
-  // Track if this is the first mount
   const isFirstMount = useRef(true);
-
-  // Fetch data when filters change
   useEffect(() => {
-    // Skip initial mount - let user set filters first, or we can enable this if needed
     if (isFirstMount.current) {
       isFirstMount.current = false;
-      // Optionally fetch on mount with default filters
       handleFetch(false);
       return;
     }
     handleFetch(false);
   }, [filters, handleFetch]);
 
-  // Handle location geolocation - only when "Current Location" is selected
-  // AND "Nearest to Me" sort is selected
   useEffect(() => {
-    const isNearestSort = filters.sort === 'Nearest to Me';
-    
-    if (filters.location === 'Current Location' && isNearestSort && navigator.geolocation) {
-      // Suppress browser extension errors
+    if (filters.location === 'Current Location' && navigator.geolocation) {
       const originalError = window.onerror;
-      const originalUnhandledRejection = window.onunhandledrejection;
-      
-      window.onerror = (message, source, lineno, colno, error) => {
-        // Ignore browser extension errors
-        if (message && (
-          message.includes('runtime.lastError') ||
-          message.includes('message channel closed') ||
-          message.includes('background page') ||
-          message.includes('extensionAdapter') ||
-          message.includes('sendMessageToTab') ||
-          message.includes('invalid arguments') ||
-          message.includes('Error in event handler')
-        )) {
-          return true; // Suppress the error
+
+      const tempHandler = (message, source, lineno, colno, error) => {
+        if (message && (message.includes('runtime.lastError') || message.includes('message channel closed'))) {
+          return true;
         }
-        if (originalError) {
-          return originalError(message, source, lineno, colno, error);
-        }
-        return false;
+        return originalError && originalError(message, source, lineno, colno, error);
       };
 
-      window.onunhandledrejection = (event) => {
-        // Ignore browser extension promise rejection errors
-        if (event.reason && (
-          event.reason.message?.includes('message channel closed') ||
-          event.reason.message?.includes('runtime.lastError') ||
-          event.reason.message?.includes('extensionAdapter') ||
-          event.reason.message?.includes('sendMessageToTab') ||
-          event.reason.message?.includes('invalid arguments') ||
-          event.reason.message?.includes('Error in event handler')
-        )) {
-          event.preventDefault();
-          return;
-        }
-        if (originalUnhandledRejection) {
-          originalUnhandledRejection(event);
-        }
-      };
+      window.onerror = tempHandler;
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          // Restore original error handlers
+          // Restore original handler as soon as we have a result
           window.onerror = originalError;
-          window.onunhandledrejection = originalUnhandledRejection;
           setFilters(prev => ({
             ...prev,
             lat: position.coords.latitude,
@@ -203,13 +142,8 @@ const Filterpage = () => {
           }));
         },
         (error) => {
-          // Restore original error handlers
+          // Restore original handler on error as well
           window.onerror = originalError;
-          window.onunhandledrejection = originalUnhandledRejection;
-          // Only log actual geolocation errors, not extension errors
-          if (error.code !== error.PERMISSION_DENIED && error.code !== error.POSITION_UNAVAILABLE) {
-            console.warn('Geolocation error:', error);
-          }
           setFilters(prev => ({
             ...prev,
             location: '',
@@ -217,23 +151,20 @@ const Filterpage = () => {
             lng: null
           }));
         },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
-    } else if (filters.location !== 'Current Location' || !isNearestSort) {
-      // Clear lat/lng when location is text-based or sort is not "Nearest to Me"
-      setFilters(prev => ({
-        ...prev,
-        lat: null,
-        lng: null
-      }));
-    }
-  }, [filters.location, filters.sort]);
 
-  // --- LOGIC ---
+      // Cleanup: restore original handler if the effect re-runs or component unmounts
+      return () => {
+        if (window.onerror === tempHandler) {
+          window.onerror = originalError;
+        }
+      };
+    } else if (filters.location !== 'Current Location') {
+      setFilters(prev => ({ ...prev, lat: null, lng: null }));
+    }
+  }, [filters.location]);
+
   const removeFilter = (key) => {
     setFilters(prev => ({
       ...prev,
@@ -242,23 +173,24 @@ const Filterpage = () => {
     }));
   };
 
-  // Handle pagination - use cursor-based pagination
   const handlePageChange = (newPage) => {
-    if (newPage > page && hasMore) {
-      // Load more data
-      handleFetch(true);
-    }
+    if (newPage > page && hasMore) handleFetch(true);
     setPage(newPage);
   };
 
-  // For display, use current page's data (API returns 8 items per page)
   const itemsPerPage = 8;
   const currentData = venues.slice((page - 1) * itemsPerPage, page * itemsPerPage);
   const totalPages = Math.ceil(venues.length / itemsPerPage) + (hasMore ? 1 : 0);
 
+  const gridClasses = viewMode === 'List' 
+    ? 'grid-cols-1' 
+    : 'grid-cols-2 md:grid-cols-2 xl:grid-cols-4';
+
+  const todayString = getTodayString();
+
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900">
-      <Navbar onSearchSubmit={setGlobalSearch} initialSearch={globalSearch} />
+      <Navbar onSearchSubmit={handleSearchSubmit} initialSearch={filters.search} />
 
       <div className="max-w-7xl mx-auto flex relative">
         <FilterSidebar 
@@ -269,123 +201,84 @@ const Filterpage = () => {
         />
 
         <main className="flex-1 p-4 md:p-8 bg-gray-50/50 min-h-screen">
-            
-            {/* --- HEADER SECTION --- */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                     {filters.location ? `Venues in ${filters.location}` : "All Venues"}
                 </h1>
                 
                 <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                     {/* Mobile Filter Toggle */}
-                    <button 
-                        onClick={() => setIsMobileSidebarOpen(true)}
-                        className="lg:hidden flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg font-bold text-sm shadow-sm"
-                    >
+                    <button onClick={() => setIsMobileSidebarOpen(true)} className="lg:hidden flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg font-bold text-sm shadow-sm">
                         <SlidersHorizontal size={16} /> Filters
                     </button>
 
-                    {/* VIEW TOGGLE BUTTONS (FUNCTIONAL) */}
                     <div className="flex bg-gray-100/80 p-1 rounded-lg border border-gray-200">
-                        <button 
-                            onClick={() => setViewMode('List')}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                                viewMode === 'List' 
-                                ? 'bg-white text-slate-900 shadow-sm' 
-                                : 'text-gray-500 hover:text-slate-700'
-                            }`}
-                        >
+                        <button onClick={() => setViewMode('List')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${viewMode === 'List' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-500 hover:text-slate-700'}`}>
                             <List size={16} /> List
                         </button>
-                        <button 
-                            onClick={() => setViewMode('Map')}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${
-                                viewMode === 'Map' 
-                                ? 'bg-white text-slate-900 shadow-sm' 
-                                : 'text-gray-500 hover:text-slate-700'
-                            }`}
-                        >
+                        <button onClick={() => setViewMode('Map')} className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-all ${viewMode === 'Map' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-500 hover:text-slate-700'}`}>
                             <Map size={16} /> Map
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* --- ACTIVE FILTERS --- */}
+            {/* Active Filters */}
             <div className="flex flex-wrap items-center gap-3 mb-6 pb-6 border-b border-gray-200">
                 <span className="text-sm font-medium text-slate-500">Showing {venues.length} venues:</span>
-                
                 {filters.type && (
-                    <button 
-                        onClick={() => removeFilter('type')}
-                        className="flex h-8 items-center gap-2 rounded-lg bg-emerald-100/50 text-emerald-700 pl-3 pr-2 text-sm font-semibold hover:bg-emerald-100 transition border border-emerald-100"
-                    >
-                        <span>⚽</span> {filters.type} <X size={14} className="opacity-60 hover:opacity-100" />
-                    </button>
+                   <button onClick={() => removeFilter('type')} className="flex h-8 items-center gap-2 rounded-lg bg-emerald-100/50 text-emerald-700 pl-3 pr-2 text-sm font-semibold border border-emerald-100">
+                       <span>⚽</span> {filters.type} <X size={14} />
+                   </button>
                 )}
                 {filters.rating !== 'Any' && filters.rating !== '' && (
-                    <button 
-                        onClick={() => removeFilter('rating')}
-                        className="flex h-8 items-center gap-2 rounded-lg bg-white border border-gray-200 text-slate-600 pl-3 pr-2 text-sm font-medium hover:bg-gray-50 transition"
-                    >
-                        <span>⭐</span> {filters.rating}+ Stars <X size={14} className="text-gray-400 hover:text-red-500" />
+                    <button onClick={() => removeFilter('rating')} className="flex h-8 items-center gap-2 rounded-lg bg-white border border-gray-200 text-slate-600 pl-3 pr-2 text-sm font-medium">
+                        <span>⭐</span> {filters.rating}+ Stars <X size={14} />
                     </button>
                 )}
                 {(filters.priceMin || filters.priceMax) && (
-                    <button 
-                        onClick={() => setFilters(p => ({...p, priceMin: '', priceMax: ''}))}
-                        className="flex h-8 items-center gap-2 rounded-lg bg-white border border-gray-200 text-slate-600 pl-3 pr-2 text-sm font-medium hover:bg-gray-50 transition"
-                    >
-                        <span>💰</span> ${filters.priceMin || 0} - ${filters.priceMax || 'Max'} <X size={14} className="text-gray-400 hover:text-red-500" />
+                    <button onClick={() => setFilters(p => ({...p, priceMin: '', priceMax: ''}))} className="flex h-8 items-center gap-2 rounded-lg bg-white border border-gray-200 text-slate-600 pl-3 pr-2 text-sm font-medium">
+                        <span>💰</span> ${filters.priceMin || 0} - ${filters.priceMax || 'Max'} <X size={14} />
                     </button>
                 )}
             </div>
 
-            {/* --- VENUE GRID --- */}
-            <div className={`grid gap-4 md:gap-6 
-                ${viewMode === 'Map' ? 'grid-cols-2' : 'grid-cols-1'} 
-                md:grid-cols-2 xl:grid-cols-4`}
-            >
-                {loading ? (
-                    Array(8).fill(null).map((_, i) => <VenueSkeleton key={`skeleton-${i}`} />)
-                ) : (
-                    currentData.length > 0 ? (
-                        currentData.map((venue) => (
-                            // 👇 HERE IS THE CHANGE: Wrapped VenueCard in Link
-                            <Link key={venue.id} to={`/details/${venue.id}`} className="block h-full group">
-                                <VenueCard venue={venue} />
-                            </Link>
-                        ))
-                    ) : (
-                        <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
-                            <div className="mb-4 text-6xl opacity-50">🏟️</div>
-                            <p className="font-medium">No venues found matching your filters.</p>
-                            <button 
-                                onClick={() => setFilters({ sort: 'Best Match', location: '', type: '', priceMin: '', priceMax: '', rating: 'Any', lat: null, lng: null })}
-                                className="mt-4 text-emerald-500 hover:underline text-sm font-bold"
-                            >
-                                Clear all filters
-                            </button>
-                        </div>
-                    )
-                )}
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="col-span-full flex items-center justify-center py-8">
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                  {error}
-                </div>
+            {error ? (
+               <div className="col-span-full flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in-95 duration-300">
+                <div className="bg-red-50 p-4 rounded-full mb-4 shadow-sm"><AlertCircle size={48} className="text-red-500" /></div>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">Oops! Something went wrong</h3>
+                <button onClick={() => handleFetch(false)} className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-lg font-bold hover:bg-emerald-600 mt-4"><RefreshCw size={18} /> Try Again</button>
+              </div>
+            ) : (
+              <div className={`grid gap-4 md:gap-6 ${gridClasses}`}>
+                  {loading ? (
+                      Array(8).fill(null).map((_, i) => <VenueSkeleton key={`skeleton-${i}`} />)
+                  ) : (
+                      currentData.length > 0 ? (
+                          currentData.map((venue) => (
+                             // --- CHANGED: LINK NOW POINTS DIRECTLY TO BOOKING PAGE ---
+                             <Link key={venue.id} to={`/details/${venue.id}`} className="block h-full group">
+                                <VenueCard venue={venue} viewMode={viewMode} />
+                             </Link>
+                          ))
+                      ) : (
+                          <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
+                              <span className="text-4xl mb-4">🔍</span>
+                              <h3 className="text-lg font-bold text-slate-800">No venues found</h3>
+                              <p className="text-slate-500 mb-6 max-w-xs mx-auto">
+                                  We couldn't find any venues matching your current filters. Try adjusting your search or filters.
+                              </p>
+                              <button onClick={() => setFilters({ sort: 'Best Match', location: '', type: '', priceMin: '', priceMax: '', rating: 'Any', lat: null, lng: null, search: '' })} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-bold shadow-md">
+                                  Clear all filters
+                              </button>
+                          </div>
+                      )
+                  )}
               </div>
             )}
 
-       
-            {/* Traditional Pagination (for loaded items) */}
-            {!loading && venues.length > 0 && totalPages > 1 && (
+            {!loading && !error && venues.length > 0 && totalPages > 1 && (
               <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
             )}
-
         </main>
       </div>
     </div>

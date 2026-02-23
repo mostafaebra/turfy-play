@@ -19,13 +19,17 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
       if (saved) {
         const parsed = JSON.parse(saved);
         // Ignore "setFilters" if parsed is same as current
-        // Optional: Only do if at least one value is non-empty (to not overwrite default)
         if (
           parsed &&
           typeof parsed === 'object' &&
           JSON.stringify(parsed) !== JSON.stringify(filters)
         ) {
-          setFilters(parsed);
+          // --- FIX: Ensure we preserve the search state if it exists, or default it ---
+          setFilters(prev => ({
+             ...prev, 
+             ...parsed,
+             search: prev.search || '' // Don't lose the current search term on reload
+          }));
         }
       }
     } catch (e) {
@@ -64,10 +68,8 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
 
   const handleGetLocation = () => {
     if ("geolocation" in navigator) {
-      // Suppress browser extension errors
       const originalError = window.onerror;
       window.onerror = (message, source, lineno, colno, error) => {
-        // Ignore browser extension errors
         if (message && (
           message.includes('runtime.lastError') ||
           message.includes('message channel closed') ||
@@ -76,7 +78,7 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
           message.includes('sendMessageToTab') ||
           message.includes('invalid arguments')
         )) {
-          return true; // Suppress the error
+          return true; 
         }
         if (originalError) {
           return originalError(message, source, lineno, colno, error);
@@ -86,7 +88,6 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          // Restore original error handler
           window.onerror = originalError;
           setFilters(prev => ({ 
             ...prev, 
@@ -97,20 +98,14 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
           setIsLocationOpen(false);
         },
         (error) => {
-          // Restore original error handler
           window.onerror = originalError;
-          // Only show alert for actual geolocation errors, not extension errors
           if (error.code !== error.PERMISSION_DENIED && error.code !== error.POSITION_UNAVAILABLE) {
             console.warn('Geolocation error:', error);
           }
           alert("Could not get location. Please check your browser permissions.");
           setIsLocationOpen(false);
         },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
       alert("Geolocation is not supported by your browser.");
@@ -124,7 +119,7 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
     ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:shadow-none'}
   `;
 
-  // Updated sort options with "Highest Price" at the top
+  // Matches Services/Backend Enums
   const sortOptions = [
     "Best Match",
     "Highest Price",
@@ -133,18 +128,16 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
     "Nearest to Me"
   ];
 
-  // Updated sports options per instruction - mapping to match API expectations
-  // Note: API uses "Soccer" (0) but UI shows "Football" - we'll map it in the service
+  // Matches Services/Backend Enums
   const sportsOptions = [
-    "Football", // Maps to "Soccer" in API (SPORT_TYPE_MAP)
+    "Football", 
     "Basketball",
     "Tennis",
     "Volleyball",
-    "Paddel", // Note: API uses "Padel" but UI shows "Paddel"
+    "Paddel", 
     "Squash"
   ];
 
-  // Helper: group sports 2 per row
   function chunkArray(arr, size) {
     const result = [];
     for (let i = 0; i < arr.length; i += size) {
@@ -155,9 +148,19 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
 
   const sportsRows = chunkArray(sportsOptions, 2);
 
-  // "Clear All" handler: reset and remove from storage too
+  // --- FIX: Include search: '' in reset to prevent crashing/inconsistency ---
   const handleClearAll = () => {
-    setFilters({ sort: 'Best Match', location: '', type: '', priceMin: '', priceMax: '', rating: 'Any', lat: null, lng: null });
+    setFilters({ 
+        sort: 'Best Match', 
+        location: '', 
+        type: '', 
+        priceMin: '', 
+        priceMax: '', 
+        rating: 'Any', 
+        lat: null, 
+        lng: null,
+        search: '' // <--- Added this to match Filterpage state
+    });
     localStorage.removeItem(FILTERS_LOCALSTORAGE_KEY);
   };
 
@@ -170,7 +173,6 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
           <h2 className="text-xl font-bold text-slate-800">Filters</h2>
           <button onClick={onClose} className="lg:hidden text-gray-400 hover:text-gray-600"><X /></button>
           <button
-            // "Clear All" passes empty values for all filters (no default values)
             onClick={handleClearAll}
             className="hidden lg:block text-sm text-emerald-500 hover:text-emerald-700 font-medium"
           >
@@ -261,7 +263,6 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
                         onChange={() => handleInputChange('type', sport)}
                         className="peer h-4 w-4 cursor-pointer appearance-none rounded-full border border-gray-300 checked:border-emerald-500 checked:bg-emerald-500 transition-all"
                       />
-                      {/* Fake Checkmark/Dot for Custom Radio */}
                       <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100">
                         <div className="h-1.5 w-1.5 bg-white rounded-full"></div>
                       </div>
@@ -269,7 +270,6 @@ const FilterSidebar = ({ filters, setFilters, isOpen, onClose }) => {
                     <span className="ml-2 text-slate-600 group-hover:text-slate-900">{sport}</span>
                   </label>
                 ))}
-                {/* If odd number of sports, fill empty for last cell */}
                 {row.length < 2 && <div />}
               </React.Fragment>
             ))}

@@ -1,7 +1,7 @@
 import React from "react";
 import Header from "../../components/Header";
-import LoginForm from "../../components/LoginForm";
-import LoginFooter from "../../components/loginFooter";
+import LoginForm from "../../components/loginpage/LoginForm";
+import LoginFooter from "../../components/loginpage/loginFooter";
 
 
 export default function Login() {
