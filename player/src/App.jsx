@@ -7,13 +7,24 @@ import Filterpage from './pages/filterpage/filterpage.jsx';
 import Login from "./pages/login/login.jsx";
 import SignUp from "./pages/signup/signup.jsx";
 import FieldDetails from './pages/FieldDetails/FieldDetails.jsx';
-import ForgotPassword from "./pages/PasswordReset/ForgetPassword.jsx";
 
-// --- CHECK THESE IMPORTS CAREFULLY ---
-import WalletPage from "./pages/account/WalletPage.jsx"; // Ensure this file exists
-import MyBookingsPage from "./pages/Bookings/MyBookingsPage.jsx"; // Ensure this is DIFFERENT from WalletPage
+// --- Feature Pages (Competition & Report) ---
+import ReportIssue from './pages/ReportIssue/ReportIssue.jsx';
+import RegisterCompetitionPage from "./pages/Competition/RegisterCompetitionPage.jsx";
+import ConfirmationPage from "./pages/Competition/ConfirmationPage.jsx";
+
+// --- Auth & Password Pages ---
+import ForgotPassword from "./pages/PasswordReset/ForgetPassword.jsx";
+import VerifyCodePage from "./pages/PasswordReset/VerifyCodePage.jsx"; 
+import SetNewPasswordPage from "./pages/PasswordReset/SetNewPasswordPage.jsx";
+import ResetSuccessPage from "./pages/PasswordReset/ResetSuccessPage.jsx";
+
+// --- Account & Bookings Pages ---
+import WalletPage from "./pages/account/WalletPage.jsx"; 
+import MyBookingsPage from "./pages/Bookings/MyBookingsPage.jsx"; 
 import BookingPage from "./pages/Booking/BookingPage.jsx"; 
 
+// --- Payment Pages ---
 import PaymentPage from "./pages/Payment/PaymentPage.jsx";
 import PaymentSuccess from "./pages/Payment/PaymentSuccess.jsx";
 import PaymentFailed from "./pages/Payment/PaymentFailed.jsx";
@@ -23,6 +34,7 @@ const RootLayout = () => (
     <Outlet />
   </div>
 );
+
 
 const router = createBrowserRouter([
   {
@@ -34,10 +46,10 @@ const router = createBrowserRouter([
       { path: "/signup", element: <SignUp /> },
       { path: "/details/:id", element: <FieldDetails /> },
       
-      { path: "/booking/:id", element: <BookingPage /> }, // The Calendar Page
+      { path: "/booking/:id", element: <BookingPage /> }, 
       
-      { path: "/bookings", element: <MyBookingsPage /> }, // The List Page
-      { path: "/wallet", element: <WalletPage /> },       // The Wallet Page
+      { path: "/bookings", element: <MyBookingsPage /> }, 
+      { path: "/wallet", element: <WalletPage /> },      
       
       { path: "/account", element: <div className="p-10 text-center">My Account</div> },
       
@@ -45,7 +57,17 @@ const router = createBrowserRouter([
       { path: "/payment/success", element: <PaymentSuccess /> },
       { path: "/payment/failed", element: <PaymentFailed /> },
 
+      // Password Reset Flow
       { path: "/forgot-password", element: <ForgotPassword /> },
+      { path: "/verify-code", element: <VerifyCodePage /> },
+      { path: "/set-new-password", element: <SetNewPasswordPage /> },
+      { path: "/reset-success", element: <ResetSuccessPage /> },
+
+      // Competition & Report Issue Routes
+      { path: "/report-issue", element: <ReportIssue /> },
+      { path: "/competition/register", element: <RegisterCompetitionPage /> },
+      { path: "/competition/confirmation", element: <ConfirmationPage /> },
+
       { path: "*", element: <Navigate to="/" replace /> }
     ]
   }
