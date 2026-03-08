@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/account/Sidebar';
-// You likely have these components, if not I can provide placeholders
 import WalletBalance from '../../components/account/WalletBalance'; 
 import TransactionHistory from '../../components/account/TransactionHistory';
 import { getWalletBalance, getTransactions } from '../../services/walletApi'; 
@@ -12,43 +11,46 @@ const WalletPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [balance, setBalance] = useState(0);
+  const [walletId, setWalletId] = useState(null); // <-- store walletId from first call
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Filters
+
   const [filterType, setFilterType] = useState('All Transactions');
   const [filterDate, setFilterDate] = useState('');
 
+  // Step 1: Fetch wallet balance (and walletId) once on mount
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchWallet = async () => {
       setLoading(true);
       setError(null);
-      try {
-        // Fetch Balance and Transactions parallel
-        const [balanceRes, transactionsRes] = await Promise.all([
-          getWalletBalance(),
-          getTransactions(filterType, filterDate)
-        ]);
-
-        if (balanceRes.isSuccess) {
-            setBalance(balanceRes.data);
-        }
-        
-        if (transactionsRes.isSuccess) {
-            setTransactions(transactionsRes.data);
-        }
-
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load wallet data.");
-      } finally {
+      const balanceRes = await getWalletBalance();
+      if (balanceRes.data) {
+        setBalance(balanceRes.data);
+        setWalletId(balanceRes.data.walletId); // <-- save walletId
+      } else if (balanceRes.error) {
+        setError(balanceRes.error);
         setLoading(false);
       }
     };
+    fetchWallet();
+  }, []);
 
-    fetchData();
-  }, [filterType, filterDate]);
+  // Step 2: Fetch transactions once walletId is available, or when filters change
+  useEffect(() => {
+    if (!walletId) return; // wait until walletId is ready
+
+    const fetchTransactions = async () => {
+      setLoading(true);
+      const transactionsRes = await getTransactions(walletId, filterType, filterDate);
+      if (transactionsRes.data) {
+        setTransactions(transactionsRes.data);
+      }
+      setLoading(false);
+    };
+
+    fetchTransactions();
+  }, [walletId, filterType, filterDate]);
 
   return (
     <div>
@@ -56,7 +58,6 @@ const WalletPage = () => {
       
       <div className="flex min-h-screen bg-light-gray font-display text-text-dark">
         
-        {/* Sidebar with correct active tab */}
         <Sidebar 
           activeTab="wallet" 
           isOpen={isSidebarOpen}
@@ -74,10 +75,7 @@ const WalletPage = () => {
               >
                 <span className="material-symbols-outlined text-2xl">menu</span>
               </button>
-
-              <h1 className="text-4xl font-black text-slate-900">
-                Wallet
-              </h1>
+              <h1 className="text-4xl font-black text-slate-900">Wallet</h1>
             </div>
 
             {error && (
@@ -87,36 +85,22 @@ const WalletPage = () => {
             )}
 
             {loading ? (
-                <div className="flex justify-center py-12 text-emerald-600">
-                    <Loader2 size={32} className="animate-spin" />
-                </div>
+              <div className="flex justify-center py-12 text-emerald-600">
+                <Loader2 size={32} className="animate-spin" />
+              </div>
             ) : (
-                <>
-                    {/* Render Components if they exist, otherwise show placeholders */}
-                    {WalletBalance ? (
-                        <WalletBalance balance={balance} loading={loading} />
-                    ) : (
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                            <h2 className="text-xl font-bold">Balance: {balance} EGP</h2>
-                        </div>
-                    )}
+              <>
+                <WalletBalance balance={balance} loading={loading} />
 
-                    {TransactionHistory ? (
-                        <TransactionHistory 
-                            transactions={transactions} 
-                            loading={loading}
-                            filter={filterType}
-                            setFilter={setFilterType}
-                            date={filterDate}
-                            setDate={setFilterDate}
-                        />
-                    ) : (
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                            <h3 className="font-bold mb-4">Transactions</h3>
-                            <p className="text-gray-500">No transaction history component found.</p>
-                        </div>
-                    )}
-                </>
+                <TransactionHistory 
+                  transactions={transactions} 
+                  loading={loading}
+                  filter={filterType}
+                  setFilter={setFilterType}
+                  date={filterDate}
+                  setDate={setFilterDate}
+                />
+              </>
             )}
           </div>
         </main>

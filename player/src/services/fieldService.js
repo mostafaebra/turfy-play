@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { api } from './api'; // Ensure you are still using the custom api instance
 
 const BASE_URL = "http://turfywafaa.runasp.net/Turfy/FilterFieldsEndpoint/Filter";
 const DETAILS_URL = "http://turfy.runasp.net/Turfy/GetByIdFieldEndpoint/Execute";
@@ -25,39 +25,38 @@ export const fetchFilteredFields = async (filters, cursor = null) => {
   try {
     const sortValue = SORT_BY_MAP[filters.sort] ?? 0;
     
-    // --- FIX 1: Always send location if available (Fixes missing distance) ---
     const shouldSendLocation = filters.lat != null && filters.lng != null;
     
+    // --- UPDATED PAYLOAD TO MATCH NEW BACKEND SPECS ---
     const requestData = {
-      // --- FIX 2: Add Search Term (Fixes search not working) ---
-      search: filters.search || null,
-
+      fieldName: filters.search || "", // Changed from 'search' and defaults to ""
+      
       lat: shouldSendLocation ? filters.lat : null,
       lng: shouldSendLocation ? filters.lng : null,
       
       sportType: filters.type && SPORT_TYPE_MAP[filters.type] !== undefined 
         ? SPORT_TYPE_MAP[filters.type] 
         : null,
-      
+        
       priceStart: filters.priceMin ? parseFloat(filters.priceMin) : null,
       priceEnd: filters.priceMax ? parseFloat(filters.priceMax) : null,
       
-      Rating: filters.rating && filters.rating !== 'Any' && filters.rating !== '' 
+      rating: filters.rating && filters.rating !== 'Any' && filters.rating !== '' 
         ? parseFloat(filters.rating) 
-        : null,
-      
+        : null, // Changed 'Rating' to lowercase 'rating'
+        
       sortBy: sortValue,
       
       lastCursorValue: cursor?.value ?? null,
       lastId: cursor?.id ?? null,
-      limit: 8
+      
+      limit: 20 // Updated limit to 20
     };
 
+    // Wraps the object exactly how the backend expects: { "requestData": { ... } }
     const requestBody = { requestData: requestData };
 
-    const response = await axios.post(BASE_URL, requestBody, {
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
-    });
+    const response = await api.post(BASE_URL, requestBody);
 
     let responseData = response.data;
     if (responseData && responseData.data && !responseData.items) {
@@ -70,17 +69,15 @@ export const fetchFilteredFields = async (filters, cursor = null) => {
 
     return responseData;
   } catch (error) {
-    console.error("API Error:", error);
+    console.error("API Error (fetchFilteredFields):", error);
     throw error;
   }
 };
 
 export const getFieldDetails = async (id) => {
   try {
-      const response = await axios.get(DETAILS_URL, {
-          params: { 
-              FieldId: id 
-          } 
+      const response = await api.get(DETAILS_URL, {
+          params: { FieldId: id } 
       });
       return response.data; 
   } catch (error) {

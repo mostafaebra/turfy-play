@@ -25,7 +25,7 @@ const VenuePreviewCard = ({ venue, onRemove }) => {
         
         {/* Image */}
         <div 
-            className="w-full md:w-1/3 h-40 md:h-auto bg-cover bg-center" 
+            className="max-w-full md:w-1/3 h-40 md:h-auto bg-cover bg-center" 
             style={{ backgroundImage: `url(${venue.image})` }}
         ></div>
         

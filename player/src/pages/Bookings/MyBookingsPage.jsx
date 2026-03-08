@@ -31,32 +31,44 @@ const MyBookingsPage = () => {
     const [nextCursor, setNextCursor] = useState(null);
     const [hasMore, setHasMore] = useState(false);
 
-    const fetchBookings = async (isLoadMore = false) => {
+   const fetchBookings = async (isLoadMore = false) => {
         console.log("MyBookingsPage: Fetching bookings...", { bookingTypeTab, isLoadMore });
         
         setLoading(true);
         setError(null);
         try {
             const cursorToSend = isLoadMore ? nextCursor : null;
+            // Fetch data using your API endpoint
             const response = await bookingApi.getPlayerBookings(bookingTypeTab, cursorToSend);
 
             console.log("MyBookingsPage: API Response", response);
 
-            if (response.isSuccess && response.data) {
-                const newItems = response.data.items || [];
+            if (response?.isSuccess || response?.errorCode === 1 || response?.data) {
+                // Safely grab the items array
+                const newItems = response?.items 
+                    || response?.data?.items 
+                    || response?.data?.data?.items 
+                    || [];
+                
+                // --- REAL PAGINATION LOGIC ---
+                // We use ?? (nullish coalescing) to ensure that if the backend sends exactly `false`, we keep it as `false`.
+                const fetchedHasMore = response?.hasMore ?? response?.data?.hasMore ?? false; 
+                const fetchedNextCursor = response?.nextCursor ?? response?.data?.nextCursor ?? null;
+
                 if (isLoadMore) {
                     setBookings(prev => [...prev, ...newItems]);
                 } else {
                     setBookings(newItems);
                 }
-                setNextCursor(response.data.nextCursor);
-                setHasMore(response.data.hasMore);
+                
+                // Update state: If fetchedHasMore is false, the Load More button disappears!
+                setNextCursor(fetchedNextCursor);
+                setHasMore(fetchedHasMore);
             } else {
-                setError(response.message || "Failed to load bookings.");
+                setError(response?.message || "Failed to load bookings.");
             }
         } catch (err) {
             console.error("MyBookingsPage: Error fetching data", err);
-            // Check if it's a 401 Unauthorized
             if (err.response && err.response.status === 401) {
                 setError("Please log in to view your bookings.");
             } else {
