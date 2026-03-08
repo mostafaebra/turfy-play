@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { api } from './api'; // Use custom instance
 
 // --- CONSTANTS & ENDPOINTS ---
 const BASE_URL = "http://turfywafaa.runasp.net/Turfy/FilterFieldsEndpoint/Filter";
@@ -6,7 +6,7 @@ const DETAILS_URL = "http://turfy.runasp.net/Turfy/GetByIdFieldEndpoint/Execute"
 const BOOKING_ACTION_URL = "http://turfy.runasp.net/Turfy/BookFieldEndpoint/Handle"; 
 const BOOKING_PAGE_URL = "http://turfy.runasp.net/Turfy/BookingPageEndpoint/Handle"; 
 const CONFIRM_BOOKING_URL = "http://turfy.runasp.net/Turfy/GetConfirmBookingPageEndpoint/Handle";
-const GET_PLAYER_BOOKINGS_URL = "http://turfytesting.runasp.net/Turfy/GetPlayerBookingsEndpoint/Execute";
+const GET_PLAYER_BOOKINGS_URL = "http://turfy.runasp.net/Turfy/GetPlayerBookingsEndpoint/Execute";
 
 // --- MAPPINGS ---
 const SPORT_TYPE_MAP = {
@@ -49,9 +49,8 @@ export const fetchFilteredFields = async (filters, cursor = null) => {
       limit: 8
     };
 
-    const response = await axios.post(BASE_URL, { requestData }, {
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
-    });
+    // Switched to api.post
+    const response = await api.post(BASE_URL, { requestData });
 
     let responseData = response.data;
     if (responseData && responseData.data && !responseData.items) {
@@ -69,7 +68,7 @@ export const fetchFilteredFields = async (filters, cursor = null) => {
 
 export const getFieldDetails = async (id) => {
   try {
-      const response = await axios.get(DETAILS_URL, { params: { FieldId: id } });
+      const response = await api.get(DETAILS_URL, { params: { FieldId: id } });
       return response.data; 
   } catch (error) {
       console.error("API Error (getFieldDetails):", error);
@@ -82,10 +81,9 @@ export const bookingApi = {
   // A. Get Availability
   getFieldAvailability: async (id, date) => {
       try {
-          const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5NDVmZjMyZC0zNWE1LTRlNTItYTc1Ny0wNTBhZDU3OGIyYmEiLCJ1bmlxdWVfbmFtZSI6IktpYW4gS2xpbmciLCJqdGkiOiIyNWNkZGQ3NS1lYWQ1LTRjMzktOTQzZi1hNWQ1MzZjZTk3NzgiLCJyb2xlIjoiUGxheWVyIiwibmJmIjoxNzcwNjUwMDc3LCJleHAiOjE3NzA3NDAwNzcsImlhdCI6MTc3MDY1MDA3NywiaXNzIjoiVHVyZnlQbGF5IiwiYXVkIjoiVHVyZnlQbGF5LUZyb250In0.EN2xUmhEDdIeRnoUjhH7SyJHeQevwsQxHts5LsoF8To";
-          const response = await axios.get(BOOKING_PAGE_URL, {
-              params: { Id: id, Date: date },
-              headers: { 'Authorization': `Bearer ${token}` }
+          // No manual token needed. api.get handles it.
+          const response = await api.get(BOOKING_PAGE_URL, {
+              params: { Id: id, Date: date }
           });
           return response.data;
       } catch (error) {
@@ -97,10 +95,7 @@ export const bookingApi = {
   // B. Initiate Booking
   bookField: async (payload) => {
     try {
-      const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5NDVmZjMyZC0zNWE1LTRlNTItYTc1Ny0wNTBhZDU3OGIyYmEiLCJ1bmlxdWVfbmFtZSI6IktpYW4gS2xpbmciLCJqdGkiOiIyNWNkZGQ3NS1lYWQ1LTRjMzktOTQzZi1hNWQ1MzZjZTk3NzgiLCJyb2xlIjoiUGxheWVyIiwibmJmIjoxNzcwNjUwMDc3LCJleHAiOjE3NzA3NDAwNzcsImlhdCI6MTc3MDY1MDA3NywiaXNzIjoiVHVyZnlQbGF5IiwiYXVkIjoiVHVyZnlQbGF5LUZyb250In0.EN2xUmhEDdIeRnoUjhH7SyJHeQevwsQxHts5LsoF8To";
-      const response = await axios.post(BOOKING_ACTION_URL, payload, {
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
-      });
+      const response = await api.post(BOOKING_ACTION_URL, payload);
       return response.data; 
     } catch (error) {
       console.error("Booking API Error:", error);
@@ -111,10 +106,8 @@ export const bookingApi = {
   // C. Confirm Booking
   getBookingConfirmation: async (bookingId) => {
     try {
-        const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI5NDVmZjMyZC0zNWE1LTRlNTItYTc1Ny0wNTBhZDU3OGIyYmEiLCJ1bmlxdWVfbmFtZSI6IktpYW4gS2xpbmciLCJqdGkiOiIyNWNkZGQ3NS1lYWQ1LTRjMzktOTQzZi1hNWQ1MzZjZTk3NzgiLCJyb2xlIjoiUGxheWVyIiwibmJmIjoxNzcwNjUwMDc3LCJleHAiOjE3NzA3NDAwNzcsImlhdCI6MTc3MDY1MDA3NywiaXNzIjoiVHVyZnlQbGF5IiwiYXVkIjoiVHVyZnlQbGF5LUZyb250In0.EN2xUmhEDdIeRnoUjhH7SyJHeQevwsQxHts5LsoF8To";
-        const response = await axios.get(CONFIRM_BOOKING_URL, {
-            params: { BookingId: bookingId },
-            headers: { 'Authorization': `Bearer ${token}` }
+        const response = await api.get(CONFIRM_BOOKING_URL, {
+            params: { BookingId: bookingId }
         });
         return response.data;
     } catch (error) {
@@ -123,27 +116,17 @@ export const bookingApi = {
     }
   },
 
-  // --- NEW: E. Get Player Bookings ---
-  // THIS MUST BE PRESENT FOR THE MY BOOKINGS PAGE TO WORK
+  // E. Get Player Bookings
   getPlayerBookings: async (type, cursor = null, limit = 10) => {
     try {
-        // Retrieve token from Local Storage using the correct key 'token'
-        const token = localStorage.getItem('token'); 
-        
-        console.log("Fetching Bookings. Token found?", !!token);
-
+        // Removed localStorage.getItem('token')
         const payload = {
             type: type, // 1 = Upcoming, 2 = History
             limit: limit,
             cursor: cursor
         };
 
-        const response = await axios.post(GET_PLAYER_BOOKINGS_URL, payload, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
+        const response = await api.post(GET_PLAYER_BOOKINGS_URL, payload);
         return response.data;
     } catch (error) {
         console.error("API Error (getPlayerBookings):", error);
@@ -151,7 +134,6 @@ export const bookingApi = {
     }
   },
 
-  // Placeholder
   getBookingSummary: async (bookingId) => {
       return { basePrice: 0, serviceFee: 0, walletBalance: 0 };
   }

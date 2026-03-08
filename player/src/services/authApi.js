@@ -1,6 +1,6 @@
-import axios from 'axios';
+import { api } from './api'; // Use custom instance
 
-const LOGIN_URL = "http://turfytesting.runasp.net/Turfy/LoginUserEndpoint/Handle"; 
+const LOGIN_URL = "http://turfy.runasp.net/Turfy/LoginUserEndpoint/Handle"; 
 
 export const authApi = {
   login: async (emailOrPhone, password) => {
@@ -13,12 +13,9 @@ export const authApi = {
 
       console.log("Sending Login Request:", JSON.stringify(payload, null, 2));
 
-      const response = await axios.post(LOGIN_URL, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
+      // Use api.post. The interceptor will skip adding a token for login
+      // because you don't have one yet, which is correct.
+      const response = await api.post(LOGIN_URL, payload);
 
       return response.data;
     } catch (error) {
