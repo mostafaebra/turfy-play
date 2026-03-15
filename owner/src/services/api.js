@@ -25,7 +25,7 @@ export const ownerSignup = async (data) => {
   }
 
   const res = await fetch(
-    "http://turfyplaydev.runasp.net/Turfy/registerownerendpoint/execute",
+    "http://turfytesting.runasp.net/Turfy/registerownerendpoint/execute",
     {
       method: "POST",
       body: formData,
