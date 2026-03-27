@@ -1,44 +1,50 @@
 import React from "react";
+import { FiCreditCard, FiCheckCircle } from "react-icons/fi";
 
 export default function PaymentSummary({ price, fees, discount, total, method }) {
   return (
-    <div className="flex flex-col gap-6 font-display">
-      {/* Title with Border Bottom */}
-      <h3 className="text-dark font-bold text-lg border-b border-border-color pb-2">
+    <div className="flex flex-col gap-5 font-sans">
+      {/* العنوان بستايل الصورة الجديد */}
+      <h3 className="text-lg font-black text-[#1E293B] border-b border-[#F1F2F4] pb-3 tracking-tight">
         Payment Summary
       </h3>
 
-      <div className="bg-light-gray/30 rounded-xl p-6 border border-border-color flex flex-col gap-4">
+      <div className="bg-white rounded-2xl p-6 border border-[#F1F2F4] flex flex-col gap-4 shadow-sm">
         
-        {/* Field Price */}
-        <div className="flex justify-between text-sm">
-          <span className="text-[#64748B] font-medium">Field Price</span>
-          <span className="text-dark font-bold">{price} EGP</span>
+        {/* سعر الملعب */}
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-gray-400 font-bold">Field Price</span>
+          <span className="text-[#1E293B] font-black">{price} EGP</span>
         </div>
         
-        {/* Service Fees */}
-        <div className="flex justify-between text-sm">
-          <span className="text-[#64748B] font-medium">Service Fee</span>
-          <span className="text-dark font-bold">{fees} EGP</span>
+        {/* مصاريف الخدمة */}
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-gray-400 font-bold">Service Fee</span>
+          <span className="text-[#1E293B] font-black">{fees} EGP</span>
         </div>
 
-        {/* Coupon Discount (Only visible if > 0) */}
+        {/* الكوبون (بيظهر بس لو فيه خصم فعلاً) */}
         {discount > 0 && (
-          <div className="flex justify-between text-sm text-primary font-bold">
-            <span>Coupon Applied</span>
-            <span>-{discount} EGP</span>
+          <div className="flex justify-between items-center text-sm px-3 py-2 bg-green-50 rounded-lg border border-green-100 animate-fadeIn">
+            <span className="text-[#22C55E] font-black flex items-center gap-2">
+              <FiCheckCircle size={14} /> Coupon Discount
+            </span>
+            <span className="text-[#22C55E] font-black">-{discount} EGP</span>
           </div>
         )}
 
-        {/* Total Price Section */}
-        <div className="border-t border-border-color pt-4 flex justify-between items-center">
-          <span className="text-text-dark font-bold text-base">Total Paid</span>
-          <span className="text-text-dark font-black text-xl">{total} EGP</span>
-        </div>
-
-        {/* Payment Method Footer */}
-        <div className="text-[10px] text-text-light uppercase tracking-widest mt-2">
-          Paid via: {method || "Credit Card"}
+        {/* الإجمالي المكتوب بخط تقيل وواضح (Total Paid) */}
+        <div className="border-t border-[#F1F2F4] pt-5 flex justify-between items-center">
+          <div className="flex flex-col">
+            <span className="text-[#1E293B] font-black text-base uppercase tracking-wider">Total Paid</span>
+            {/* طريقة الدفع تحت الإجمالي بشكل شيك */}
+            <span className="text-[10px] text-gray-300 font-bold uppercase tracking-[0.1em] mt-1 flex items-center gap-1">
+              <FiCreditCard size={12} /> {method || "Digital Payment"}
+            </span>
+          </div>
+          <span className="text-[#22C55E] font-black text-2xl tracking-tight leading-none">
+            {total} <span className="text-xs">EGP</span>
+          </span>
         </div>
       </div>
     </div>

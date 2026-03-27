@@ -22,7 +22,7 @@ export default function LoginForm() {
 
   try {
     const response = await axios.post(
-      "http://turfytesting.runasp.net/Turfy/LoginUserEndpoint/Handle",
+      "http://turfy.runasp.net/Turfy/LoginUserEndpoint/Handle",
       {
         "emailOrPhone": email,
         "password": password,

@@ -1,25 +1,36 @@
 import React from "react";
 
- 
 export default function EntryCode({ code }) {
-  
-  const displayCode = code ? code.toString().split("") : ["-", "-", "-", "-", "-", "-"];
+  // هندلة الحالة لو الكود مش موجود أو قيمته null
+  const hasCode = code && code !== "string" && code !== "";
 
   return (
-    <div className="bg-light-gray/50 border border-border-color rounded-xl p-8 text-center font-display">
-      <h3 className="text-dark font-bold text-lg mb-2">Entry Code</h3>
-      <p className="text-[#64748B] text-sm mb-6 font-medium">Show this code at the venue to enter</p>
-      
-      <div className="flex justify-center gap-3">
-        {displayCode.map((num, index) => (
-          <div 
-            key={index} 
-            className="w-12 h-16 bg-white border border-border-color rounded-lg flex items-center justify-center text-2xl font-bold text-text-dark shadow-sm"
-          >
-            {num}
-          </div>
-        ))}
-      </div>
+    <div className="bg-white border border-[#F1F2F4] rounded-[1.5rem] p-8 text-center shadow-sm">
+      {/* العنوان الصغير بنفس ستايل الصورة */}
+      <h4 className="text-[10px] md:text-[11px] font-black text-gray-400 uppercase tracking-[0.25em] mb-3">
+        Entry Code
+      </h4>
+
+      {hasCode ? (
+        <div className="space-y-4 animate-fadeIn">
+          {/* عرض الكود بشكل نصي واسع (ستايل الصورة الجديد) */}
+          <p className="text-4xl md:text-5xl font-black text-[#1E293B] tracking-[0.3em] md:tracking-[0.4em] font-mono ml-[0.4em]">
+            {code}
+          </p>
+          
+          {/* رسالة توضيحية بسيطة للقديم */}
+          <p className="text-[10px] font-bold text-[#22C55E] uppercase tracking-wider opacity-80">
+            Show this at the venue
+          </p>
+        </div>
+      ) : (
+        /* الحالة لو الكود منتهي (Expired) زي ما في الصورة بالظبط */
+        <div className="py-2 animate-pulse">
+          <p className="text-sm md:text-base font-bold text-gray-300 italic">
+            This code has expired.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

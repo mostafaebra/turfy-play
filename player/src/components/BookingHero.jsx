@@ -1,42 +1,37 @@
 import React from "react";
 
- 
 export default function BookingHero({ imageUrl, status }) {
   
-  
- const getStatusDetails = (statusValue) => {
-  const value = String(statusValue);  
+  // دالة تحويل الأرقام لحالات مفهومة بناءً على كلام الباك-إند
+  const getStatusDetails = (statusValue) => {
+    // الخريطة الجديدة بناءً على الأرقام
+    const statusMap = {
+      "4": { text: "Confirmed", bgColor: "bg-[#22C55E]" }, // الأخضر الرسمي
+      "1": { text: "Pending", bgColor: "bg-amber-500" },   // البرتقالي
+      "0": { text: "Cancelled", bgColor: "bg-red-500" },   // الأحمر
+      "Ended": { text: "Ended", bgColor: "bg-[#475569]" }, // الرمادي الغامق زي الصورة
+    };
 
-  const statusMap = {
-    "Pending": { text: "Pending", bgColor: "bg-yellow-500" },
-    "Cancelled": { text: "Cancelled", bgColor: "bg-red-500" },
-    "Confirmed": { text: "Confirmed", bgColor: "bg-primary" },
-    "Completed": { text: "Completed", bgColor: "bg-blue-500" },
-    "Refunded": { text: "Refunded", bgColor: "bg-purple-500" },
-    "Rejected": { text: "Rejected", bgColor: "bg-gray-500" },
+    // لو الحالة مش موجودة بنعتبرها "Ended" كشكل افتراضي للحجوزات القديمة
+    return statusMap[String(statusValue)] || statusMap["Ended"];
   };
-
-  return statusMap[value] || { text: "Unknown", bgColor: "bg-gray-400" };
-};
-
-
-
- console.log(typeof status, status);
-
 
   const statusInfo = getStatusDetails(status);
 
   return (
-    <div className="relative w-full h-64 rounded-xl overflow-hidden shadow-md">
-      { }
+    <div className="relative w-full h-64 md:h-80 rounded-[1.5rem] overflow-hidden shadow-sm group">
+      {/* 🖼️ الصورة مع الـ Fallback */}
       <img 
-        src={imageUrl && imageUrl !== "string" ? imageUrl : "/default-field.jpg"}
-        alt="Sports Field" 
-        className="w-full h-full object-cover"
+        src={imageUrl && imageUrl !== "string" ? imageUrl : "https://via.placeholder.com/800x400?text=Field+Image"}
+        alt="Field" 
+        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
       />
       
-      { }
-      <div className={`absolute bottom-4 left-4 ${statusInfo.bgColor} text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg`}>
+      {/* 🌑 الـ Gradient الداكن اللي تحت عشان يظهر الكلام (زي الصورة) */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-80" />
+      
+      {/* 🏷️ الـ Status Badge (مطابق للصورة تماماً) */}
+      <div className={`absolute bottom-6 left-6 ${statusInfo.bgColor} text-white px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] shadow-lg border border-white/10`}>
         {statusInfo.text}
       </div>
     </div>

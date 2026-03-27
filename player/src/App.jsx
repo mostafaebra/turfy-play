@@ -13,6 +13,9 @@ import ResetSuccessPage from "./pages/PasswordReset/ResetSuccessPage.jsx";
 import MyAccount from "./pages/userAcoount/MyAccount.jsx";
 import BookingDetails from "./pages/BookingDetails/BookingDetails.jsx";
 import Competitions from "./pages/Events&Competitions/Competitions.jsx";
+import PlayerNotifications from "./pages/PlayerNotifications/PlayerNotifications.jsx";  
+import WriteReview from "./pages/Reviewpage/WriteReview.jsx"; 
+import TicketDetails from "./pages/MyCompetitionDetails/TicketDetails.jsx"; 
 
 function App() {
   return (
@@ -31,6 +34,10 @@ function App() {
         <Route path="/my-account" element={<MyAccount />} />
        <Route path="/booking-details/:id" element={<BookingDetails />} />  
         <Route path="/competitions" element={<Competitions />} />
+        <Route path="/notifications" element={<PlayerNotifications />} /> 
+      <Route path="/write-review/:bookingId" element={<WriteReview />} />
+      <Route path="/ticket-details/:id" element={<TicketDetails />} />  
+      
 
         {/* Catch-all: Redirect unknown URLs back to Home */}
         <Route path="*" element={<Navigate to="/" replace />} />
