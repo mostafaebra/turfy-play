@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { ownerSignup } from "../../services/api";
+import { useNavigate } from "react-router-dom"; 
+import { ownerSignup } from "../../services/authApi"; 
+
 import Header from "../../components/Header";
 import PersonalDetails from "../../components/PersonalDetails";
 import SecuritySection from "../../components/SecuritySection";
 import UploadIDSection from "../../components/UploadIDSection";
 import Terms from "../../components/Terms";
- 
 
 export default function OwnerSignUp() {
   const [fullName, setFullName] = useState("");
@@ -19,6 +20,8 @@ export default function OwnerSignUp() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,7 +42,9 @@ export default function OwnerSignUp() {
       const res = await ownerSignup(signupData);
       console.log("SIGNUP SUCCESS:", res);
 
-      alert("Account created!");
+      alert("Account created successfully!");
+      navigate("/login"); 
+
     } catch (err) {
       setError(err.message || "Registration failed");
     }
@@ -49,55 +54,58 @@ export default function OwnerSignUp() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-         <Header />
+      <Header />
 
       <h1 className="text-3xl text-center font-black text-dark-navy-blue mb-3">
          List Your Fields for Free.
       </h1>
       <p className="text-[#64748B] mb-6 text-center">
         Join hundreds of Field owners maximizing revenue with Turfy Play.
-        Zero commissions, guaranteed bosokings.
+        Zero commissions, guaranteed bookings.
       </p>
 
-        {/* form*/}
-    <form onSubmit={handleSubmit}
-      className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md flex flex-col gap-6">
-        
-
+      {/* form */}
+      <form 
+        onSubmit={handleSubmit}
+        className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md flex flex-col gap-6"
+      >
         <PersonalDetails
-  fullName={fullName}
-  setFullName={setFullName}
-  phoneNumber={phoneNumber}
-  setPhoneNumber={setPhoneNumber}
-  email={email}
-  setEmail={setEmail}
-/>
+          fullName={fullName}
+          setFullName={setFullName}
+          phoneNumber={phoneNumber}
+          setPhoneNumber={setPhoneNumber}
+          email={email}
+          setEmail={setEmail}
+        />
 
-<SecuritySection
-  password={password}
-  setPassword={setPassword}
-  confirmPassword={confirmPassword}
-  setConfirmPassword={setConfirmPassword}
-/>
+        <SecuritySection
+          password={password}
+          setPassword={setPassword}
+          confirmPassword={confirmPassword}
+          setConfirmPassword={setConfirmPassword}
+        />
 
-<UploadIDSection
-  frontCardImage={frontCardImage}
-  setFrontCardImage={setFrontCardImage}
-  backCardImage={backCardImage}
-  setBackCardImage={setBackCardImage}
-/>
+        <UploadIDSection
+          frontCardImage={frontCardImage}
+          setFrontCardImage={setFrontCardImage}
+          backCardImage={backCardImage}
+          setBackCardImage={setBackCardImage}
+        />
 
+        <Terms />
 
-<Terms />
+        {/* Submit Button */}
+        <button 
+          type="submit" 
+          disabled={loading}
+          className={`h-12 bg-black text-white rounded-lg transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-800'}`}
+        >
+          {loading ? "Creating Account..." : "Create Partner Account"}
+        </button>
 
- {/* Submit Button */}
-      <button type="submit" className="h-12 bg-black text-white rounded-lg hover:bg-gray-800">
-        {loading ? "Loading..." : "Create Partner Account"}
-      </button>
-
-      {/* Error */}
-      {error && <p className="text-red-500">{error}</p>}
-    </form>
-  </div>
-  );
+        {/* Error */}
+        {error && <p className="text-red-500 text-center font-medium mt-2">{error}</p>}
+      </form>
+    </div>
+  );
 }

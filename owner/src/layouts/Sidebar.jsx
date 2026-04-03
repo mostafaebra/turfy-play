@@ -6,7 +6,7 @@ const Sidebar = () => {
   return (
     <div className="w-64 bg-[#1A2235] h-screen text-white flex flex-col shrink-0">
       <div className="p-6 mb-4">
-        <h1 className="text-2xl font-bold text-green-500">Turfy Owner</h1>
+        <h1 className="text-2xl font-bold text-green-500">Turfy play</h1>
       </div>
 
       <nav className="flex-1 px-4 space-y-2">

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom"; 
-import axios from "axios"; 
+
+import { ownerLogin } from "../../services/authApi"; 
 
 export default function OwnerloginForm() {
   const [email, setEmail] = useState("");
@@ -18,37 +19,22 @@ export default function OwnerloginForm() {
     setLoading(true);
 
     try {
-      // 1. FIX: Send standard JSON object (Axios does this by default)
-      // Do NOT use new FormData() here.
-      const payload = {
-        emailOrPhone: email, 
-        password: password,  
-        discriminator: 1 // Send as number (1 = Owner)
-      };
+      const responseData = await ownerLogin(email, password);
 
-      const response = await axios.post(
-        "http://turfyplaydev.runasp.net/Turfy/loginuserendpoint/handle", 
-        payload
-        // 2. FIX: Remove the 'Content-Type' header manually. 
-        // Axios automatically sets 'application/json' for objects.
-      );
+      console.log("Login Response:", responseData);
 
-      console.log("Login Response:", response.data);
-
-      if (response.data && response.data.isSuccess) {
-        // Success! Save token
-        const token = response.data.data; 
-        localStorage.setItem("authToken", token);
+      if (responseData && responseData.isSuccess) {
+        const token = responseData.data; 
         
-        // Redirect
-        navigate("/create-field"); 
+        localStorage.setItem("token", token);
+        
+        navigate("/dashboard"); 
       } else {
-        setError(response.data.message || "Login failed. Please check your credentials.");
+        setError(responseData.message || "Login failed. Please check your credentials.");
       }
       
     } catch (err) {
       console.error("Login Error:", err);
-      // Handle 415, 400, 500 errors gracefully
       if (err.response?.status === 415) {
         setError("System Error: Server expected JSON but got something else.");
       } else {
