@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useLayoutEffect, useContext } from 'react';
-import { api } from '../services/api'; 
+import  API from '../services/API'; 
 
 const AuthContext = createContext(null);
 
@@ -8,14 +8,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // --- TEMPORARY DEV FIX: Initialize from localStorage ---
-  // We will revert this to 'useState()' (empty) once the backend /api/me is ready.
+  // We will revert this to 'useState()' (empty) once the backend /API/me is ready.
   const [token, setToken] = useState(localStorage.getItem('token') || undefined); 
 
   useEffect(() => {
     const fetchSession = async () => {
       try {
         // --- TEMPORARY: Skip the backend check for now ---
-        // const response = await api.get('/api/me'); 
+        // const response = await API.get('/API/me'); 
         // setToken(response.data.accessToken);
         
         // Just load user data from storage if we have a token
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
 
   // Request Interceptor (Keeps your token in headers)
   useLayoutEffect(() => {
-    const requestInterceptor = api.interceptors.request.use((config) => {
+    const requestInterceptor = API.interceptors.request.use((config) => {
       // Pass the token if we have it
       if (!config._retry && token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -48,12 +48,12 @@ export const AuthProvider = ({ children }) => {
       return config;
     });
 
-    return () => api.interceptors.request.eject(requestInterceptor);
+    return () => API.interceptors.request.eject(requestInterceptor);
   }, [token]);
 
   // Response Interceptor (Handles 401/403)
   useLayoutEffect(() => {
-    const responseInterceptor = api.interceptors.response.use(
+    const responseInterceptor = API.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
       }
     );
 
-    return () => api.interceptors.response.eject(responseInterceptor);
+    return () => API.interceptors.response.eject(responseInterceptor);
   }, []);
 
   // --- LOGIN: Save to LocalStorage (Temporary) ---
