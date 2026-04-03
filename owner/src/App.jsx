@@ -6,6 +6,9 @@ import AddNewField from "./pages/addNewField/AddNewField.jsx";
 import Ownerlogin from "./pages/Ownerlogin/Ownerlogin.jsx";
 import OwnerSignUp from "./pages/Ownersignup/Ownersignup.jsx";
 import FinancialsPage from './pages/Financials/FinancialsPage.jsx';
+import MyFieldsPage from './pages/Fields/MyFieldsPage.jsx';
+import Dashboard from './pages/Dashboard/DashboardPage.jsx';
+import SchedulePage from './pages/Schedule/SchedulePage';
 
 // Layouts
 import OwnerLayout from './layouts/OwnerLayout.jsx';
@@ -22,6 +25,9 @@ function App() {
           <Route path="/" element={<AddNewField />} /> 
           <Route path="/add-field" element={<AddNewField />} /> 
           <Route path="/financials" element={<FinancialsPage />} />
+          <Route path="/my-fields" element={<MyFieldsPage />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/schedule" element={<SchedulePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
