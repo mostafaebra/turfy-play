@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { bookingApi } from '../../services/bookingApi';
+import { bookingAPI } from '../../services/bookingApi';
 // --- FIX: Import missing icons ---
 import { CreditCard, Wallet, ArrowRight, AlertCircle, Loader2, Lock, Smartphone, Receipt } from 'lucide-react';
 
@@ -57,7 +57,7 @@ const PaymentPage = () => {
     };
 
     try {
-      const response = await bookingApi.bookField(payload);
+      const response = await bookingAPI.bookField(payload);
 
       if (response.isSuccess && response.data) {
         if (response.data.redirectUrl) {

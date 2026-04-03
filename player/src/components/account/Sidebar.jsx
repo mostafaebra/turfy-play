@@ -2,10 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
-  // 1. Added 'path' to each item so navigation works
+  // Added 'competitions' to the navigation items
   const navItems = [
     { id: 'account', label: 'Account', icon: 'person', path: '/account' },
     { id: 'bookings', label: 'My Bookings', icon: 'calendar_month', path: '/bookings' },
+    { id: 'competitions', label: 'My Competitions', icon: 'emoji_events', path: '/competitions' },
     { id: 'wallet', label: 'Wallet', icon: 'account_balance_wallet', path: '/wallet' },
   ];
 
@@ -58,7 +59,7 @@ const Sidebar = ({ activeTab, onTabChange, isOpen, onClose }) => {
             {navItems.map((item) => (
               <Link
                 key={item.id}
-                to={item.path}  // FIX: Added 'to' prop
+                to={item.path}
                 onClick={() => {
                   if (onTabChange) onTabChange(item.id);
                   if (onClose) onClose(); 

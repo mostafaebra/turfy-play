@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, Calendar, MapPin, Clock, Copy, Share2, Loader2, AlertCircle } from 'lucide-react';
-import { bookingApi } from '../../services/bookingApi';
-
+import { bookingAPI } from '../../services/bookingApi';
 const PaymentSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,7 +32,7 @@ const PaymentSuccess = () => {
         }
 
         try {
-            const response = await bookingApi.getBookingConfirmation(bookingId);
+            const response = await bookingAPI.getBookingConfirmation(bookingId);
             if (response.isSuccess && response.data) {
                 setBookingDetails(response.data);
             } else {

@@ -1,4 +1,4 @@
-import { api } from './api'; // Ensure you are still using the custom api instance
+import API from './API'; // Ensure you are still using the custom API instance
 
 const BASE_URL = "http://turfywafaa.runasp.net/Turfy/FilterFieldsEndpoint/Filter";
 const DETAILS_URL = "http://turfy.runasp.net/Turfy/GetByIdFieldEndpoint/Execute";
@@ -56,7 +56,7 @@ export const fetchFilteredFields = async (filters, cursor = null) => {
     // Wraps the object exactly how the backend expects: { "requestData": { ... } }
     const requestBody = { requestData: requestData };
 
-    const response = await api.post(BASE_URL, requestBody);
+    const response = await API.post(BASE_URL, requestBody);
 
     let responseData = response.data;
     if (responseData && responseData.data && !responseData.items) {
@@ -76,7 +76,7 @@ export const fetchFilteredFields = async (filters, cursor = null) => {
 
 export const getFieldDetails = async (id) => {
   try {
-      const response = await api.get(DETAILS_URL, {
+      const response = await API.get(DETAILS_URL, {
           params: { FieldId: id } 
       });
       return response.data; 

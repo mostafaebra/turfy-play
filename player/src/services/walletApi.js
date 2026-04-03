@@ -1,7 +1,7 @@
-import { api } from './api';
+import  API  from './API';
 
 const WALLET_API_URL = "http://turfy.runasp.net/Turfy/GetPlayerWalletEndpoint/Execute";
-const TRANSACTIONS_API_URL = "http://turfy.runasp.net/Turfy/GetPlayerTransactionsEndpoint/Execute";
+const TRANSACTIONS_API_URL = "http://turfy.runasp.net/Turfy/GetWalletTransactionsEndpoint/Execute";
 
 const FILTER_MAP = {
   "All Transactions": 1,
@@ -11,7 +11,7 @@ const FILTER_MAP = {
 
 export const getWalletBalance = async () => {
   try {
-    const response = await api.get(WALLET_API_URL);
+    const response = await API.get(WALLET_API_URL);
 
     if (response.data?.isSuccess) {
       const data = response.data.data;
@@ -43,7 +43,7 @@ export const getTransactions = async (walletId, filterType = "All Transactions",
     const filterValue = FILTER_MAP[filterType] || 1;
 
     const params = {
-      walletId,
+      
       limit: 100,
       filter: filterValue,
     };
@@ -52,13 +52,13 @@ export const getTransactions = async (walletId, filterType = "All Transactions",
       params.date = date;
     }
 
-    const response = await api.get(TRANSACTIONS_API_URL, { params });
+    const response = await API.get(TRANSACTIONS_API_URL, { params });
 
     if (response.data?.isSuccess) {
       // Response uses "history" not "transactions"
-      const apiTransactions = response.data.data?.history || [];
+      const APITransactions = response.data.data?.items || [];
 
-      const mappedTransactions = apiTransactions.map((t, index) => ({
+      const mappedTransactions = APITransactions.map((t, index) => ({
         id: t.id ?? t.transactionId ?? index,
         type: t.title || (t.isCredit ? "Refund / Credit" : "Payment"),
         date: t.transactionDate ? t.transactionDate.split('T')[0] : new Date().toISOString().split('T')[0],

@@ -5,6 +5,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AddNewField from "./pages/addNewField/AddNewField.jsx";
 import Ownerlogin from "./pages/Ownerlogin/Ownerlogin.jsx";
 import OwnerSignUp from "./pages/Ownersignup/Ownersignup.jsx";
+import DealapprovePage from "./pages/Dealpage/DealapprovePage.jsx";
+import ActiveDealPage from "./pages/Dealpage/ActiveDealPage.jsx";
 
 function App() {
   return (
@@ -15,7 +17,9 @@ function App() {
 
            
         {/* Auth Routes */}
-       
+        <Route path="/DealapprovePage/:id" element={<DealapprovePage />} />
+        <Route path="/ActiveDealPage/:id" element={<ActiveDealPage />} />
+
         <Route path="/" element={<AddNewField />} />
         <Route path="/Ownerlogin" element={<Ownerlogin/>} />
          <Route path="/Ownersignup" element={<OwnerSignUp/>} />

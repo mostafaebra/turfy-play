@@ -1,4 +1,4 @@
-import { api } from './api'; // Use custom instance
+import  API  from './API'; // Use custom instance
 
 // --- CONSTANTS & ENDPOINTS ---
 const BASE_URL = "http://turfywafaa.runasp.net/Turfy/FilterFieldsEndpoint/Filter";
@@ -49,8 +49,8 @@ export const fetchFilteredFields = async (filters, cursor = null) => {
       limit: 8
     };
 
-    // Switched to api.post
-    const response = await api.post(BASE_URL, { requestData });
+    // Switched to API.post
+    const response = await API.post(BASE_URL, { requestData });
 
     let responseData = response.data;
     if (responseData && responseData.data && !responseData.items) {
@@ -68,7 +68,7 @@ export const fetchFilteredFields = async (filters, cursor = null) => {
 
 export const getFieldDetails = async (id) => {
   try {
-      const response = await api.get(DETAILS_URL, { params: { FieldId: id } });
+      const response = await API.get(DETAILS_URL, { params: { FieldId: id } });
       return response.data; 
   } catch (error) {
       console.error("API Error (getFieldDetails):", error);
@@ -76,13 +76,13 @@ export const getFieldDetails = async (id) => {
   }
 };
 
-export const bookingApi = {
+export const bookingAPI = {
   
   // A. Get Availability
   getFieldAvailability: async (id, date) => {
       try {
-          // No manual token needed. api.get handles it.
-          const response = await api.get(BOOKING_PAGE_URL, {
+          // No manual token needed. API.get handles it.
+          const response = await API.get(BOOKING_PAGE_URL, {
               params: { Id: id, Date: date }
           });
           return response.data;
@@ -95,7 +95,7 @@ export const bookingApi = {
   // B. Initiate Booking
   bookField: async (payload) => {
     try {
-      const response = await api.post(BOOKING_ACTION_URL, payload);
+      const response = await API.post(BOOKING_ACTION_URL, payload);
       return response.data; 
     } catch (error) {
       console.error("Booking API Error:", error);
@@ -106,7 +106,7 @@ export const bookingApi = {
   // C. Confirm Booking
   getBookingConfirmation: async (bookingId) => {
     try {
-        const response = await api.get(CONFIRM_BOOKING_URL, {
+        const response = await API.get(CONFIRM_BOOKING_URL, {
             params: { BookingId: bookingId }
         });
         return response.data;
@@ -126,7 +126,7 @@ export const bookingApi = {
             cursor: cursor
         };
 
-        const response = await api.post(GET_PLAYER_BOOKINGS_URL, payload);
+        const response = await API.post(GET_PLAYER_BOOKINGS_URL, payload);
         return response.data;
     } catch (error) {
         console.error("API Error (getPlayerBookings):", error);
