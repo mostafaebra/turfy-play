@@ -18,6 +18,11 @@ import MyCompetitionsPage from "./pages/MyCompetitions/MyCompetitionsPage.jsx"; 
 import ForgotPassword from "./pages/PasswordReset/ForgetPassword.jsx";
 import VerifyCodePage from "./pages/PasswordReset/VerifyCodePage.jsx";
 import SetPasswordPage from "./pages/PasswordReset/SetPasswordPage.jsx";
+
+// --- Auth & Password Pages ---
+import ForgotPassword from "./pages/PasswordReset/ForgetPassword.jsx";
+import VerifyCodePage from "./pages/PasswordReset/VerifyCodePage.jsx"; 
+import SetNewPasswordPage from "./pages/PasswordReset/SetNewPasswordPage.jsx";
 import ResetSuccessPage from "./pages/PasswordReset/ResetSuccessPage.jsx";
 
 // --- Account & Bookings Pages ---
@@ -35,6 +40,7 @@ const RootLayout = () => (
     <Outlet />
   </div>
 );
+
 
 const router = createBrowserRouter([
   {
@@ -62,6 +68,7 @@ const router = createBrowserRouter([
       { path: "/forgot-password", element: <ForgotPassword /> },
       { path: "/verify-code", element: <VerifyCodePage /> },
       { path: "/set-new-password", element: <SetPasswordPage /> },
+      { path: "/set-new-password", element: <SetNewPasswordPage /> },
       { path: "/reset-success", element: <ResetSuccessPage /> },
 
       // Competition & Report Issue Routes

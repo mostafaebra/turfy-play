@@ -30,7 +30,7 @@ export const registerTeamInCompetition = async (data) => {
   formData.append("CompetitionId", Number(data.competitionId)); 
   formData.append("TeamName", data.teamName);
   
-  formData.append("TeamNickname", data.teamNickname || ""); 
+  formData.append("TeamNackname", data.teamNickname || ""); 
   
   formData.append("TeamCaptain", data.teamCaptain);
   
