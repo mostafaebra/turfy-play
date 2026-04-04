@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { ownerSignup } from "../../services/api";
+import { useNavigate } from "react-router-dom"; 
+import { ownerSignup } from "../../services/authApi"; 
+
 import Header from "../../components/Header";
 import PersonalDetails from "../../components/PersonalDetails";
 import SecuritySection from "../../components/SecuritySection";
@@ -19,6 +21,8 @@ export default function OwnerSignUp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const navigate = useNavigate(); 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -30,27 +34,17 @@ export default function OwnerSignUp() {
       confirmPassword,
       phoneNumber,
       email,
-      frontCardImage,  
+      frontCardImage,
       backCardImage,
     };
 
     try {
-      const response = await ownerSignup(signupData);
-      console.log("SIGNUP RESPONSE:", response);
+      const res = await ownerSignup(signupData);
+      console.log("SIGNUP SUCCESS:", res);
 
-      // التصحيح هنا: الـ response نفسه هو اللي فيه isSuccess
-      if (response && response.isSuccess) {
-        
-        // لو الـ token موجود جوه data
-        const token = response.data; 
-        if (token) localStorage.setItem("token", token);
+      alert("Account created successfully!");
+      navigate("/login"); 
 
-        window.location.href = "/Ownerlogin"; 
-      } else {
-         
-        setError(response.message || "Registration Failed");
-        alert("خطأ: " + (response.message || "حدث خطأ ما"));
-      }
     } catch (err) {
       setError(err.message || "Registration failed");
     }
@@ -63,15 +57,15 @@ export default function OwnerSignUp() {
       <Header />
 
       <h1 className="text-3xl text-center font-black text-dark-navy-blue mb-3">
-        List Your Fields for Free.
+         List Your Fields for Free.
       </h1>
       <p className="text-[#64748B] mb-6 text-center">
         Join hundreds of Field owners maximizing revenue with Turfy Play.
         Zero commissions, guaranteed bookings.
       </p>
 
-      {/* form*/}
-      <form
+      {/* form */}
+      <form 
         onSubmit={handleSubmit}
         className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md flex flex-col gap-6"
       >
@@ -101,16 +95,16 @@ export default function OwnerSignUp() {
         <Terms />
 
         {/* Submit Button */}
-        <button
-          type="submit"
-          className="h-12 bg-black text-white rounded-lg hover:bg-gray-800"
-          disabled={loading} 
+        <button 
+          type="submit" 
+          disabled={loading}
+          className={`h-12 bg-black text-white rounded-lg transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-800'}`}
         >
-          {loading ? "Loading..." : "Create Partner Account"}
+          {loading ? "Creating Account..." : "Create Partner Account"}
         </button>
 
         {/* Error */}
-        {error && <p className="text-red-500 text-center">{error}</p>}
+        {error && <p className="text-red-500 text-center font-medium mt-2">{error}</p>}
       </form>
     </div>
   );
