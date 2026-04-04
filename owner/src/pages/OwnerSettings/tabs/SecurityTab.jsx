@@ -1,16 +1,14 @@
 import React, { useState, useImperativeHandle, forwardRef } from "react";
-import axios from "axios";
+import { changeOwnerPassword } from "../../../services/settingsApi";
 
 const SecurityTab = forwardRef((props, ref) => {
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   
-   
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  
   useImperativeHandle(ref, () => ({
     handleUpdatePassword: async () => {
       if (!oldPassword || !newPassword || !confirmPassword) {
@@ -25,30 +23,19 @@ const SecurityTab = forwardRef((props, ref) => {
 
       setLoading(true);
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.post(
-          "http://turfytesting.runasp.net/Turfy/ChangePasswordEndpoint/ChangePassword",
-          {
-            oldPassword: oldPassword,
-            newPassword: newPassword,
-            confirmPassword: confirmPassword
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
+        const responseData = await changeOwnerPassword({
+          oldPassword: oldPassword,
+          newPassword: newPassword,
+          confirmPassword: confirmPassword
+        });
 
-        if (response.data.isSuccess) {
+        if (responseData.isSuccess) {
           alert("Password changed successfully!");
-         
           setOldPassword("");
           setNewPassword("");
           setConfirmPassword("");
         } else {
-          alert("Error: " + response.data.message);
+          alert("Error: " + responseData.message);
         }
       } catch (error) {
         console.error("Change password error:", error);
@@ -61,7 +48,6 @@ const SecurityTab = forwardRef((props, ref) => {
 
   return (
     <div className="flex flex-col gap-8 pb-20 animate-fadeIn font-display">
-      
       {/* 1. Change Password Section */}
       <section className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
         <div className="mb-6">

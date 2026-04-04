@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { FiEdit2, FiCheckCircle } from "react-icons/fi";
-import axios from "axios";
+import { fetchOwnerProfile, updateOwnerProfile } from "../../../services/settingsApi";
 
 const ProfileTab = forwardRef((props, ref) => {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
-  
   
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
@@ -16,16 +15,13 @@ const ProfileTab = forwardRef((props, ref) => {
   const [imagePreview, setImagePreview] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // 2.
   useEffect(() => {
-    const fetchProfileInfo = async () => {
+    const loadProfile = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("http://turfytesting.runasp.net/Turfy/GetOwnerInfoEndPoint/GetInfo", {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (response.data.isSuccess) {
-          const d = response.data.data;
+        const responseData = await fetchOwnerProfile();
+        if (responseData.isSuccess) {
+          const d = responseData.data;
           setProfileData(d);
           setFullName(d.fullName || "");
           setBusinessName(d.businessName || "");
@@ -38,7 +34,7 @@ const ProfileTab = forwardRef((props, ref) => {
         setLoading(false);
       }
     };
-    fetchProfileInfo();
+    loadProfile();
   }, []);
 
   const handleImageChange = (e) => {
@@ -49,16 +45,14 @@ const ProfileTab = forwardRef((props, ref) => {
     }
   };
 
+  // 3
   useImperativeHandle(ref, () => ({
     handleUpdateProfile: async () => {
       if (isUpdating) return;
       setIsUpdating(true);
       
       try {
-        const token = localStorage.getItem("token");
         const formData = new FormData();
-        
-         
         formData.append("FullName", fullName);
         formData.append("BusinessName", businessName);
         formData.append("CommercialNo", commercialNo);
@@ -68,22 +62,13 @@ const ProfileTab = forwardRef((props, ref) => {
           formData.append("Image", selectedImage);
         }
 
-        const response = await axios.patch(
-          "http://turfytesting.runasp.net/Turfy/UpdateOwnerInfoEndpoint/UpdateProfile",
-          formData,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data',
-            }
-          }
-        );
+        const responseData = await updateOwnerProfile(formData);
 
-        if (response.data.isSuccess) {
+        if (responseData.isSuccess) {
           alert("Profile updated successfully!");
-          if (response.data.data) setProfileData(response.data.data);
+          if (responseData.data) setProfileData(responseData.data);
         } else {
-          alert("Update failed: " + response.data.message);
+          alert("Update failed: " + responseData.message);
         }
       } catch (error) {
         console.error("Update error:", error);

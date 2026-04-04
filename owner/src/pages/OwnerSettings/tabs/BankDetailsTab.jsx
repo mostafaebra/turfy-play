@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
-import { FiLock, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
-import axios from "axios";
+import { FiLock } from "react-icons/fi";
+import { fetchPayoutDetails, updatePayoutDetails } from "../../../services/settingsApi";
 
 const BankDetailsTab = forwardRef((props, ref) => {
   const [loading, setLoading] = useState(true);
   const [payoutData, setPayoutData] = useState({
-    preferredMethod: 1, // 1 = Bank, 2 = Wallet, 3 = Instapay
+    preferredMethod: 1, 
     bankName: "",
     accountHolderName: "",
     iban: "",
@@ -13,16 +13,12 @@ const BankDetailsTab = forwardRef((props, ref) => {
     instapayAddress: ""
   });
 
-  
   useEffect(() => {
-    const fetchPayoutDetails = async () => {
+    const loadPayoutDetails = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("http://turfytesting.runasp.net/Turfy/GetOwnerPayoutDetailsEndpoint/GetPayoutDetails", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (response.data.isSuccess && response.data.data) {
-          setPayoutData(response.data.data);
+        const responseData = await fetchPayoutDetails();
+        if (responseData.isSuccess && responseData.data) {
+          setPayoutData(responseData.data);
         }
       } catch (error) {
         console.error("Error fetching payout details:", error);
@@ -30,10 +26,9 @@ const BankDetailsTab = forwardRef((props, ref) => {
         setLoading(false);
       }
     };
-    fetchPayoutDetails();
+    loadPayoutDetails();
   }, []);
 
-  
   const validateData = () => {
     if (payoutData.preferredMethod === 1) {
       if (!payoutData.iban.startsWith("EG") || payoutData.iban.length !== 29) {
@@ -55,25 +50,13 @@ const BankDetailsTab = forwardRef((props, ref) => {
     return true;
   };
 
-   
   useImperativeHandle(ref, () => ({
     handleUpdatePayout: async () => {
       if (!validateData()) return;
 
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.patch(
-          "http://turfytesting.runasp.net/Turfy/UpdateOwnerPayoutDetailsEndpoint/UpdatePayoutDetails",
-          payoutData,
-          {
-            headers: { 
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json' 
-            }
-          }
-        );
-
-        if (response.data.isSuccess) {
+        const responseData = await updatePayoutDetails(payoutData);
+        if (responseData.isSuccess) {
           alert("Payout details updated successfully!");
         }
       } catch (error) {

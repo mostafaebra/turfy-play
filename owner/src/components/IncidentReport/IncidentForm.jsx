@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FiUploadCloud, FiX } from "react-icons/fi";
-import axios from "axios";
+import { submitIncidentReport } from "../../services/incidentApi";
 
 export default function IncidentForm({ bookingId }) {
   const [category, setCategory] = useState(1);
@@ -19,32 +19,23 @@ export default function IncidentForm({ bookingId }) {
     setLoading(true);
     
     try {
-      const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("BookingId", bookingId);
       formData.append("Category", category);
       formData.append("Severity", severity);
       formData.append("Description", description);
       
-       
       images.forEach((img) => formData.append("IssueImages", img));
 
-      const response = await axios.post("http://turfy.runasp.net/Turfy/CreateIssueEndpoint/Handle", formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const responseData = await submitIncidentReport(formData);
 
-      if (response.data.isSuccess) {
+      if (responseData.isSuccess) {
         alert("Report submitted successfully!");
         window.location.href = "/owner-bookings";
       } else {
-        
-        alert(response.data.message || "Failed to submit report");
+        alert(responseData.message || "Failed to submit report");
       }
     } catch (error) {
-     
       const serverMsg = error.response?.data?.message || "An error occurred during submission";
       alert(serverMsg);
       console.error("Submit Error:", error);
@@ -129,7 +120,6 @@ export default function IncidentForm({ bookingId }) {
           </div>
         </div>
         
-        {/* alert message*/}
         <p className="text-[15px] text-gray-400 font-medium leading-relaxed">
           This report will be reviewed by the Turfy Play Trust & Safety team. False reporting may lead to penalties.
         </p>

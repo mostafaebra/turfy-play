@@ -1,11 +1,21 @@
 import axios from "axios";
-
-// const API = axios.create({
-//   baseURL: "http://turfyplaydev.runasp.net/Turfy/registerownerendpoint/execute",    
-// });
+import { BASE_URL } from "../config"; 
 
 
-// ============ SIGNUP Owner============
+const API = axios.create({
+  baseURL: BASE_URL,
+});
+
+API.interceptors.request.use((req) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    req.headers.Authorization = `Bearer ${token}`;
+  }
+  return req;
+});
+
+
+
 export const ownerSignup = async (data) => {
   const formData = new FormData();
 
@@ -15,7 +25,6 @@ export const ownerSignup = async (data) => {
   formData.append("PhoneNumber", data.phoneNumber);
   formData.append("Email", data.email);
 
-  // Important → Images should be file objects, not base64
   if (data.frontCardImage) {
     formData.append("FrontCardImage", data.frontCardImage);
   }
@@ -24,8 +33,9 @@ export const ownerSignup = async (data) => {
     formData.append("BackCardImage", data.backCardImage);
   }
 
+ 
   const res = await fetch(
-    "http://turfytesting.runasp.net/Turfy/registerownerendpoint/execute",
+    `${BASE_URL}/Turfy/registerownerendpoint/execute`,
     {
       method: "POST",
       body: formData,
@@ -36,5 +46,8 @@ export const ownerSignup = async (data) => {
     throw new Error("Signup failed");
   }
 
-  return await res.json();
+  return await res.json();
 };
+
+
+export default API;

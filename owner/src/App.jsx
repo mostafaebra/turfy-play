@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AddNewField from "./pages/addNewField/AddNewField.jsx";
 import Ownerlogin from "./pages/Ownerlogin/Ownerlogin.jsx";
 import OwnerSignUp from "./pages/Ownersignup/Ownersignup.jsx";
-import OwnerSettings from "./pages/owner profile&settings/OwnerSettings.jsx";
+import OwnerSettings from "./pages/OwnerSettings/OwnerSettings.jsx";
 import IncidentReport from "./pages/Reportsforowner/IncidentReport.jsx"; 
 import OwnerNotifications from "./pages/ownerNotifications/OwnerNotifications.jsx";
 import LoyaltyDashboard from "./pages/LoyaltyDashboard/LoyaltyDashboard.jsx"; 

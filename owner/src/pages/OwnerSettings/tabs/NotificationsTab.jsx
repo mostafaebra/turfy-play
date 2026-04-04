@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
-import axios from "axios";
+import { fetchNotificationSettings, updateNotificationSettings } from "../../../services/settingsApi";
 
 const NotificationsTab = forwardRef((props, ref) => {
   const [settings, setSettings] = useState({
@@ -14,14 +14,11 @@ const NotificationsTab = forwardRef((props, ref) => {
   const [changedFields, setChangedFields] = useState({});  
    
   useEffect(() => {
-    const fetchSettings = async () => {
+    const loadSettings = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("http://turfytesting.runasp.net/Turfy/OwnerNotificationSettingsEndpoint/GetSettings", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (response.data.isSuccess) {
-          setSettings(response.data.data);
+        const responseData = await fetchNotificationSettings();
+        if (responseData.isSuccess) {
+          setSettings(responseData.data);
         }
       } catch (error) {
         console.error("Error fetching notification settings:", error);
@@ -29,17 +26,15 @@ const NotificationsTab = forwardRef((props, ref) => {
         setLoading(false);
       }
     };
-    fetchSettings();
+    loadSettings();
   }, []);
 
-  
   const handleToggle = (field) => {
     const newValue = !settings[field];
     setSettings({ ...settings, [field]: newValue });
     setChangedFields({ ...changedFields, [field]: newValue });  
   };
 
-  
   useImperativeHandle(ref, () => ({
     handleUpdateNotifications: async () => {
       if (Object.keys(changedFields).length === 0) {
@@ -48,20 +43,8 @@ const NotificationsTab = forwardRef((props, ref) => {
       }
 
       try {
-        const token = localStorage.getItem("token");
-         
-        const response = await axios.patch(
-          "http://turfytesting.runasp.net/Turfy/OwnerNotificationSettingsEndpoint/UpdateSettings",
-          changedFields,
-          {
-            headers: { 
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json' 
-            }
-          }
-        );
-
-        if (response.data.isSuccess) {
+        const responseData = await updateNotificationSettings(changedFields);
+        if (responseData.isSuccess) {
           alert("Notification settings updated successfully!");
           setChangedFields({}); 
         }
@@ -76,7 +59,6 @@ const NotificationsTab = forwardRef((props, ref) => {
 
   return (
     <div className="flex flex-col gap-8 pb-20 animate-fadeIn font-display">
-      
       {/* 1. Booking Alerts Section */}
       <section className="bg-white p-6 md:p-8 rounded-2xl border border-gray-100 shadow-sm">
         <div className="mb-6">
@@ -127,7 +109,6 @@ const NotificationsTab = forwardRef((props, ref) => {
   );
 });
 
- 
 const NotificationToggle = ({ label, checked, onToggle }) => (
   <div className="flex items-center justify-between p-4 bg-[#F9FAFB] rounded-xl border border-gray-100">
     <span className="font-bold text-[#1E293B] text-sm">{label}</span>
