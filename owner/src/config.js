@@ -4,6 +4,6 @@ const SERVERS = {
   wafaa: "http://turfywafaa.runasp.net"
 };
 
-const ACTIVE_ENV = "wafaa"; 
+const ACTIVE_ENV = "testing"; 
 
 export const BASE_URL = SERVERS[ACTIVE_ENV];

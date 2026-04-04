@@ -261,19 +261,12 @@ const AddNewField = () => {
     // }, 1000);
 
     try {
-      const TOKEN =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiI1ZjhmYWQ1Yi1kOWNiLTQ2OWYtYTE2NS03MDg2NzcyODk1MGUiLCJ1bmlxdWVfbmFtZSI6IlppYWRBdHRhIiwianRpIjoiNjRjN2YxYmEtZTFjOC00NTc3LWE1YzQtNGVhOTFkMWE5ZWQ1Iiwicm9sZSI6Ik93bmVyIiwibmJmIjoxNzY1MTUxMTU4LCJleHAiOjE3NjUxNTQ3NTgsImlhdCI6MTc2NTE1MTE1OCwiaXNzIjoiVHVyZnlQbGF5IiwiYXVkIjoiVHVyZnlQbGF5LUZyb250In0.AVYrF5M9ziVCDC1yB5tsrG8kmtnjg5y1aMBNLf11EnU"; // توكن التجربة
-
-      const responseData = await createFieldRequest(payload, TOKEN);
+      const responseData = await createFieldRequest(payload); 
 
       if (responseData.isSuccess === true) {
         setIsSubmitted(true);
         window.scrollTo(0, 0);
       }
-      // else {
-      //     console.error("⚠️ السيرفر رفض البيانات:", responseData);
-      //     alert(`خطأ في البيانات: ${responseData.message}`); // اعرض الرسالة اللي راجعة (Sport Type must not be empty)
-      // }
     } catch (error) {
       console.error(" Error ❌ ", error);
     }
