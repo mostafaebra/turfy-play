@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { bookingApi } from '../../services/bookingApi';
+import { bookingAPI } from '../../services/bookingApi';
 import { Calendar as CalendarIcon, ChevronDown, AlertCircle, CheckCircle, X } from 'lucide-react';
 
 const BookingPage = () => {
@@ -38,7 +38,7 @@ const BookingPage = () => {
             
             try {
                 const dateStr = formatDate(selectedDate);
-                const res = await bookingApi.getFieldAvailability(id, dateStr);
+                const res = await bookingAPI.getFieldAvailability(id, dateStr);
                 
                 if (res && res.isSuccess !== false) {
                      setFieldData(res.data || res);

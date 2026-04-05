@@ -12,6 +12,12 @@ import FieldDetails from './pages/FieldDetails/FieldDetails.jsx';
 import ReportIssue from './pages/ReportIssue/ReportIssue.jsx';
 import RegisterCompetitionPage from "./pages/Competition/RegisterCompetitionPage.jsx";
 import ConfirmationPage from "./pages/Competition/ConfirmationPage.jsx";
+import MyCompetitionsPage from "./pages/MyCompetitions/MyCompetitionsPage.jsx"; // <-- Import added
+
+// --- Auth & Password Pages ---
+import ForgotPassword from "./pages/PasswordReset/ForgetPassword.jsx";
+import VerifyCodePage from "./pages/PasswordReset/VerifyCodePage.jsx";
+import SetPasswordPage from "./pages/PasswordReset/SetPasswordPage.jsx";
 
 // --- Auth & Password Pages ---
 import ForgotPassword from "./pages/PasswordReset/ForgetPassword.jsx";
@@ -49,6 +55,7 @@ const router = createBrowserRouter([
       { path: "/booking/:id", element: <BookingPage /> }, 
       
       { path: "/bookings", element: <MyBookingsPage /> }, 
+      { path: "/competitions", element: <MyCompetitionsPage /> }, // <-- Route added
       { path: "/wallet", element: <WalletPage /> },      
       
       { path: "/account", element: <div className="p-10 text-center">My Account</div> },
@@ -60,6 +67,7 @@ const router = createBrowserRouter([
       // Password Reset Flow
       { path: "/forgot-password", element: <ForgotPassword /> },
       { path: "/verify-code", element: <VerifyCodePage /> },
+      { path: "/set-new-password", element: <SetPasswordPage /> },
       { path: "/set-new-password", element: <SetNewPasswordPage /> },
       { path: "/reset-success", element: <ResetSuccessPage /> },
 

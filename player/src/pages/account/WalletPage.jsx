@@ -35,7 +35,7 @@ const WalletPage = () => {
     };
     fetchWallet();
   }, []);
-
+setTransactions
   // Step 2: Fetch transactions once walletId is available, or when filters change
   useEffect(() => {
     if (!walletId) return; // wait until walletId is ready

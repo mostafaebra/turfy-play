@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { bookingApi } from '../../services/bookingApi';
+import { bookingAPI } from '../../services/bookingApi';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/account/Sidebar';
 import { Calendar, Loader2, AlertCircle } from 'lucide-react';
@@ -39,7 +39,7 @@ const MyBookingsPage = () => {
         try {
             const cursorToSend = isLoadMore ? nextCursor : null;
             // Fetch data using your API endpoint
-            const response = await bookingApi.getPlayerBookings(bookingTypeTab, cursorToSend);
+            const response = await bookingAPI.getPlayerBookings(bookingTypeTab, cursorToSend);
 
             console.log("MyBookingsPage: API Response", response);
 
